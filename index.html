@@ -1,0 +1,576 @@
+<title>Ahab — A Nightly Trading-Intelligence System</title>
+<style>
+  :root {
+    --night: #071522;
+    --night-2: #0B2233;
+    --ink: #12263A;
+    --ink-soft: #3D5266;
+    --paper: #F6F4ED;
+    --water: #E5ECE8;
+    --line: #C9CFC4;
+    --magenta: #B02A63;
+    --phosphor: #8FD4C1;
+    --long: #2E7D5B;
+    --short: #B3402E;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.65;
+    margin: 0;
+  }
+  a { color: var(--magenta); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--magenta); outline-offset: 3px;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 28px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--magenta); font-weight: 600;
+  }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  h2 { font-size: 34px; font-weight: 600; line-height: 1.2; margin: 10px 0 14px; }
+  h3 { font-size: 20px; font-weight: 600; }
+  p { margin: 0; }
+  .prose { max-width: 62ch; }
+  .prose p + p { margin-top: 1em; }
+  section { padding: 84px 0; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- HERO ---------- */
+  header.hero {
+    position: relative; overflow: hidden;
+    background: var(--night); color: #E8EFEA;
+  }
+  #sonar { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .hero-inner {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; justify-content: center;
+    min-height: 88vh; padding: 90px 0 70px;
+  }
+  .hero .eyebrow { color: var(--phosphor); }
+  .hero h1 {
+    font-size: clamp(64px, 11vw, 128px); font-weight: 600;
+    letter-spacing: 0.04em; line-height: 1; margin: 18px 0 8px;
+  }
+  .hero .tag {
+    font-size: clamp(19px, 2.4vw, 24px); max-width: 34ch;
+    color: #C4D2CC; line-height: 1.45; text-wrap: balance;
+  }
+  .hero-stats {
+    display: flex; flex-wrap: wrap; gap: 12px 40px;
+    margin-top: 56px; padding-top: 22px;
+    border-top: 1px solid rgba(143, 212, 193, 0.25);
+  }
+  .hero-stats div { font-family: var(--mono); font-size: 13px; }
+  .hero-stats b { display: block; font-size: 22px; font-weight: 600; color: var(--phosphor); }
+  .hero-stats span { color: #8FA3A8; letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; }
+
+  /* ---------- SENSOR CARDS ---------- */
+  .sensors { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 40px; }
+  .sensor {
+    background: var(--water); border: 1px solid var(--line);
+    padding: 26px 26px 30px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .sensor .glyph { font-family: var(--mono); font-size: 12px; color: var(--magenta); letter-spacing: 0.15em; }
+  .sensor p { font-size: 15.5px; color: var(--ink-soft); }
+  .thesis {
+    margin-top: 44px; padding: 30px 34px;
+    background: var(--night-2); color: #DCE8E1;
+    font-size: 21px; line-height: 1.5; max-width: 100%;
+  }
+  .thesis em { color: var(--phosphor); font-style: normal; border-bottom: 2px solid var(--magenta); }
+
+  /* ---------- PIPELINE ---------- */
+  .band { background: var(--water); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .pipeline { display: flex; gap: 0; margin-top: 42px; overflow-x: auto; padding-bottom: 12px; }
+  .step { min-width: 190px; flex: 1; padding: 0 22px 0 0; position: relative; }
+  .step + .step { padding-left: 22px; border-left: 1px dashed #9FB0A6; }
+  .step time { font-family: var(--mono); font-size: 12px; color: var(--magenta); letter-spacing: 0.1em; }
+  .step h3 { font-size: 17px; margin: 8px 0 6px; }
+  .step p { font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+  /* ---------- CASE STUDY ---------- */
+  .audit { background: var(--night); color: #D9E4DE; }
+  .audit .eyebrow { color: var(--phosphor); }
+  .audit h2 { color: #F0F5F1; max-width: 22ch; }
+  .audit .prose { color: #B9C9C2; }
+  .audit .prose strong { color: #F0F5F1; }
+  .audit-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: start; }
+  .verdicts { display: flex; flex-direction: column; gap: 1px; background: rgba(143,212,193,0.25); border: 1px solid rgba(143,212,193,0.25); }
+  .verdict { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 14px 18px; background: var(--night-2); }
+  .verdict .lens { font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; }
+  .verdict .delta { font-family: var(--mono); font-size: 17px; font-weight: 600; }
+  .delta.down { color: #E08A76; }
+  .delta.up { color: #86CFA9; }
+  .verdict small { color: #7E939B; font-size: 12px; display: block; }
+  .audit-note { font-family: var(--mono); font-size: 12px; color: #7E939B; margin-top: 14px; line-height: 1.6; }
+  .pull {
+    margin: 34px 0 0; padding-left: 22px; border-left: 3px solid var(--magenta);
+    font-size: 22px; line-height: 1.45; color: #EDF3EF; max-width: 30ch; text-wrap: balance;
+  }
+
+  /* ---------- HIGHLIGHTS ---------- */
+  .hl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 42px; }
+  .hl { background: var(--paper); padding: 26px 28px 30px; }
+  .hl h3 { font-size: 17px; margin-bottom: 8px; }
+  .hl p { font-size: 15px; color: var(--ink-soft); }
+  .hl .glyph { font-family: var(--mono); color: var(--magenta); font-size: 12px; letter-spacing: 0.12em; display: block; margin-bottom: 12px; }
+
+  /* ---------- LOG EXCERPT ---------- */
+  .terminal {
+    background: var(--night); color: #C9D8D1; border-radius: 2px;
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.7;
+    padding: 26px 30px; overflow-x: auto; margin-top: 38px;
+  }
+  .terminal .cmt { color: #6E848D; }
+  .terminal .tick { color: var(--phosphor); font-weight: 600; }
+  .terminal .pos { color: #86CFA9; }
+  .terminal .neg { color: #E08A76; }
+  .terminal .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- DEVLOG ---------- */
+  .log-list { margin-top: 38px; display: flex; flex-direction: column; }
+  .log-entry {
+    display: grid; grid-template-columns: 150px 1fr; gap: 24px;
+    padding: 22px 0; border-top: 1px solid var(--line); align-items: baseline;
+  }
+  .log-entry:last-child { border-bottom: 1px solid var(--line); }
+  .log-entry time { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); }
+  .log-entry h3 { font-size: 18px; }
+  .log-entry h3 a { color: var(--ink); text-decoration: none; }
+  .log-entry h3 a:hover { color: var(--magenta); }
+  .log-entry p { font-size: 15px; color: var(--ink-soft); margin-top: 4px; }
+
+  /* ---------- DETAILS / LAYERING ---------- */
+  details { margin-top: 18px; max-width: 62ch; }
+  summary {
+    cursor: pointer; font-family: var(--mono); font-size: 12.5px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--magenta);
+  }
+  details > div { margin-top: 12px; font-size: 15.5px; color: var(--ink-soft); }
+
+  /* ---------- FOOTER ---------- */
+  footer { background: var(--night); color: #A9BCB4; padding: 70px 0 50px; }
+  footer .wrap { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 48px; }
+  footer h2 { color: #EDF3EF; font-size: 26px; }
+  footer p { font-size: 15.5px; max-width: 52ch; }
+  footer .links { font-family: var(--mono); font-size: 14px; display: flex; flex-direction: column; gap: 10px; }
+  footer .links a { color: var(--phosphor); }
+  .disclaimer {
+    grid-column: 1 / -1; margin-top: 40px; padding-top: 20px;
+    border-top: 1px solid rgba(143,212,193,0.2);
+    font-family: var(--mono); font-size: 11.5px; color: #64787F; line-height: 1.7;
+  }
+
+  @media (max-width: 760px) {
+    section { padding: 60px 0; }
+    .audit-grid, footer .wrap { grid-template-columns: 1fr; gap: 32px; }
+    .log-entry { grid-template-columns: 1fr; gap: 4px; }
+    .hero-inner { min-height: 72vh; }
+  }
+</style>
+
+<header class="hero">
+  <canvas id="sonar" aria-hidden="true"></canvas>
+  <div class="wrap hero-inner">
+    <span class="eyebrow">Personal project · Python · 2026</span>
+    <h1>AHAB</h1>
+    <p class="tag">A nightly trading-intelligence system that hunts institutional
+      "whales" in market data — and grades its own predictions honestly.</p>
+    <div class="hero-stats">
+      <div><b class="num">57,000+</b><span>congressional trades scored</span></div>
+      <div><b class="num">212</b><span>symbols scanned nightly</span></div>
+      <div><b class="num">4,067</b><span>predictions graded &amp; audited</span></div>
+      <div><b class="num">$0<span style="font-size:14px">/mo</span></b><span>infrastructure cost</span></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">What it does</span>
+    <h2>Two independent sensors, one signal</h2>
+    <div class="prose">
+      <p>Members of the U.S. Congress are required by law to disclose their stock
+        trades — and some of them are suspiciously good at it. Separately, when
+        institutional money moves, it leaves footprints: abnormally large trades
+        that stand out from everyday retail churn. Ahab watches both, every night,
+        and cross-references them.</p>
+    </div>
+    <div class="sensors">
+      <div class="sensor">
+        <span class="glyph">SENSOR 01 — DISCLOSURES</span>
+        <h3>The congressional radar</h3>
+        <p>Downloads every STOCK Act disclosure back to 2012 (~57,000 trades),
+          computes risk-adjusted returns per politician, and assigns each a tier
+          from S (elite) to F. When multiple high-tier officials buy the same
+          stock within 30 days, that convergence gets flagged and ranked.</p>
+      </div>
+      <div class="sensor">
+        <span class="glyph">SENSOR 02 — LIVE FLOW</span>
+        <h3>The whale sonar</h3>
+        <p>Scans stocks and crypto for concentrated order flow — single enormous
+          prints against a sea of small retail trades. Separates "whale"
+          footprints from crowd noise, tracks accumulation vs. distribution per
+          symbol, and reads the market regime from index-level flow.</p>
+      </div>
+      <div class="sensor">
+        <span class="glyph">SENSOR 03 — SYNTHESIS</span>
+        <h3>The interpreter</h3>
+        <p>An LLM reads the night's volume anomalies, calibration history, and
+          news handoff, then writes the morning report in plain English — what
+          moved, what it likely means, and how confident to be, with every claim
+          traceable to the underlying data files.</p>
+      </div>
+    </div>
+    <p class="thesis">Think of it as a radar system with two independent sensors:
+      one tracks what informed politicians are doing, the other tracks what
+      institutional money is doing right now. <em>When both light up on the same
+      stock, that's the strongest signal.</em></p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <span class="eyebrow">How a night runs</span>
+    <h2>The pipeline, from close to coffee</h2>
+    <div class="prose">
+      <p>Everything runs unattended on a schedule. By the time the operator wakes
+        up, the system has scanned, graded yesterday's calls, recalibrated, and
+        written its report.</p>
+    </div>
+    <div class="pipeline">
+      <div class="step">
+        <time>22:00</time>
+        <h3>Scan</h3>
+        <p>Pull the day's bars and prints for 212 symbols; detect concentrated
+          volume anomalies against per-symbol baselines.</p>
+      </div>
+      <div class="step">
+        <time>22:20</time>
+        <h3>Grade</h3>
+        <p>Score every previous prediction against what the market actually did —
+          using a next-day anchor so the system can't credit itself for moves it
+          couldn't have traded.</p>
+      </div>
+      <div class="step">
+        <time>22:40</time>
+        <h3>Calibrate</h3>
+        <p>Update confidence curves from the full grading history, so a "70%"
+          from the system means 70% — not enthusiasm.</p>
+      </div>
+      <div class="step">
+        <time>23:00</time>
+        <h3>Interpret</h3>
+        <p>The LLM reads the volume, calibration, and news handoff files and
+          writes the narrative morning report.</p>
+      </div>
+      <div class="step">
+        <time>07:00</time>
+        <h3>Report</h3>
+        <p>Markdown report + alerts, with a run manifest listing every file the
+          night's analysis touched.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="audit">
+  <div class="wrap">
+    <div class="audit-grid">
+      <div>
+        <span class="eyebrow">Case study · July 2026</span>
+        <h2>The night I caught my own backtest cheating</h2>
+        <div class="prose">
+          <p>Ahab's nightly run makes a call after the market closes, then grades
+            it later. The subtle bug: grading measured each move from
+            <strong>that same day's close</strong> — a price the system could see
+            but could never have traded. Any overnight gap got silently counted
+            as skill.</p>
+          <p>The fix was an honest anchor — grade from the <strong>next day's
+            open</strong>, the first price actually available. Then the hard
+            part: regrade all 4,067 settled predictions and publish whatever
+            fell out.</p>
+          <p>The experimental momentum lens lost 2.5 points of hit rate — a real
+            chunk of its "edge" was an untradeable gap. But the combined
+            ensemble <strong>gained</strong> 5.5 points: the old anchor had been
+            unfairly penalizing it. One in six verdicts flipped.</p>
+        </div>
+        <p class="pull">A backtest that flatters you is worse than no backtest
+          at all.</p>
+      </div>
+      <div>
+        <div class="verdicts">
+          <div class="verdict">
+            <div class="lens">EXPERIMENTAL<small>momentum lens</small></div>
+            <div class="delta down num">−2.5pp</div>
+          </div>
+          <div class="verdict">
+            <div class="lens">COMBINED<small>ensemble</small></div>
+            <div class="delta up num">+5.5pp</div>
+          </div>
+          <div class="verdict">
+            <div class="lens">BASELINE<small>pure flow</small></div>
+            <div class="delta up num">+1.9pp</div>
+          </div>
+          <div class="verdict">
+            <div class="lens">VERDICTS FLIPPED<small>of 4,067 regraded</small></div>
+            <div class="delta num" style="color:#EDF3EF">16.4%</div>
+          </div>
+        </div>
+        <p class="audit-note">Hit-rate change per lens after switching from
+          same-close to next-open grading anchors. Honest measurement cut the
+          flattering lens and rescued the good one.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Under the hood</span>
+    <h2>Engineering it like it matters</h2>
+    <div class="hl-grid">
+      <div class="hl">
+        <span class="glyph">CONSTRAINT</span>
+        <h3>$0/month, by design</h3>
+        <p>No paid APIs, no cloud bill: free market-data feeds, SQLite as the
+          event store, launchd for scheduling, and a plan to move LLM inference
+          to a self-hosted open-weights model. Constraints forced better
+          engineering, not worse.</p>
+      </div>
+      <div class="hl">
+        <span class="glyph">VALIDATION</span>
+        <h3>Walk-forward, out-of-sample</h3>
+        <p>Signals are validated with walk-forward A/B comparisons and
+          out-of-sample blending diagnostics — never fit and scored on the same
+          window. Overlapping outcome windows and unlabeled tails are handled
+          explicitly, not ignored.</p>
+      </div>
+      <div class="hl">
+        <span class="glyph">CALIBRATION</span>
+        <h3>Confidence that means something</h3>
+        <p>Every prediction carries a probability, and the system tracks whether
+          its 70%s land 70% of the time. Signal snapshots are persisted so
+          calibration can be recomputed retroactively as grading rules improve.</p>
+      </div>
+      <div class="hl">
+        <span class="glyph">SAFETY</span>
+        <h3>Suggest mode, gated execution</h3>
+        <p>The bot writes reports; a human decides. Automated paper trading is
+          built but deliberately fenced behind a single explicit config gate,
+          with hard rules preventing any code path from loosening it.</p>
+      </div>
+      <div class="hl">
+        <span class="glyph">DUAL LENS</span>
+        <h3>Baseline vs. experimental</h3>
+        <p>Every symbol gets two independent reads — pure order flow and
+          momentum — reported side by side with the divergence named. When the
+          lenses disagree, that disagreement is the information.</p>
+      </div>
+      <div class="hl">
+        <span class="glyph">OBSERVABILITY</span>
+        <h3>Every run leaves a manifest</h3>
+        <p>Each nightly scan logs exactly which inputs it read and which reports
+          it wrote. Any number in any report can be traced back to the files
+          that produced it.</p>
+      </div>
+    </div>
+    <details>
+      <summary>Stack, for the technical reader</summary>
+      <div>Python · SQLite event store (detections, executions, volume events,
+        signal snapshots) · Alpaca + yfinance + CCXT market data · pytest ·
+        Discord/Telegram alerting · ~40 analysis and backfill scripts ·
+        markdown-first reporting. Single-developer, test-covered, no CI/CD
+        theater it doesn't need.</div>
+    </details>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <span class="eyebrow">From the morning report</span>
+    <h2>What a read actually looks like</h2>
+    <div class="prose">
+      <p>Excerpt from a real nightly report (dates and figures representative).
+        Every claim cites the flow behind it — including the caveats that argue
+        against the headline.</p>
+    </div>
+    <div class="terminal" role="img" aria-label="Excerpt from a nightly Ahab report showing per-symbol whale-flow reads">
+<span class="cmt">## Clear accumulation — smart money net in</span><br><br>
+<span class="tick">AAPL</span>  net <span class="pos num">+$7.6B</span> over 17 sessions · up 11 of them · <span class="num">$60B</span> gross<br>
+      One June 8 buy is ~64% of the total, but recent flow <em>confirms</em><br>
+      rather than fades it (last-5: <span class="pos num">+$5.1B</span>). Genuine ongoing buying.<br><br>
+<span class="tick">GOOGL</span> net <span class="neg num">−$7.5B</span> — but 82% is a single month-end day.<br>
+      Ex that day the window is flat and recent flow is strongly<br>
+      <span class="pos">positive</span> (last-5: <span class="pos num">+$4.8B</span>). The headline selling is mechanical<br>
+      rebalancing; the underlying read is net buying.<br><br>
+<span class="cmt">## No whale presence — nothing to follow</span><br><br>
+<span class="tick">SPCE</span>  17 sessions prove there's no whale here: <span class="num">±$0–3M</span> concentrated<br>
+      against <span class="num">$30–830M</span>/day of retail crowd. Not "light" whale<br>
+      activity — <em>none</em>. A pure retail vehicle.
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">The log</span>
+    <h2>Build notes, in the open</h2>
+    <div class="prose">
+      <p>The code is private — it trades a real account — but the engineering
+        isn't. Each entry is the honest version: the problem, the wrong turns,
+        and what shipped.</p>
+    </div>
+    <div class="log-list">
+      <div class="log-entry">
+        <time>2026-07-11</time>
+        <div>
+          <h3><a href="#">Backfill, ensembles, and an honest anchor</a></h3>
+          <p>Regrading 4,067 predictions under a tradeable anchor — and why the
+            ensemble got better when measurement got stricter.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <time>2026-07-02</time>
+        <div>
+          <h3><a href="#">Replacing the paid LLM with a box under my desk</a></h3>
+          <p>Planning the move to a self-hosted open-weights model for the
+            nightly interpretation step, keeping the $0/month constraint intact.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <time>2026-06-23</time>
+        <div>
+          <h3><a href="#">Momentum, whales, and anomalies: a signal bake-off</a></h3>
+          <p>Researching which of three signal families deserves a place in the
+            nightly ensemble — with walk-forward tests, not vibes.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <time>2026-06-09</time>
+        <div>
+          <h3><a href="#">Why "no whale" is a finding, not a failure</a></h3>
+          <p>Three weeks of data proving certain meme stocks have zero
+            institutional footprint — and why that's a tradeable fact.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <h2>Want the full tour?</h2>
+      <p style="margin-top:14px">The repository is private because it manages a
+        live account, but I'm glad to walk through the architecture, the
+        grading system, or any design decision on a call — whiteboard included.</p>
+    </div>
+    <div class="links">
+      <a href="https://github.com/ojw92">github.com/ojw92</a>
+      <a href="#">Email</a>
+      <a href="#">LinkedIn</a>
+      <a href="#">Résumé (PDF)</a>
+    </div>
+    <p class="disclaimer">Ahab is a personal research project. Nothing on this
+      page is investment advice, a track-record claim, or an offer of any kind.
+      All trading discussed is paper or personal-scale. Figures shown are from
+      the system's own internal grading and are presented for engineering
+      illustration only.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var canvas = document.getElementById('sonar');
+  var ctx = canvas.getContext('2d');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var W, H, cx, cy, maxR;
+
+  // Deterministic pseudo-random so the blip field is stable frame to frame
+  function rand(seed) {
+    var x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+    return x - Math.floor(x);
+  }
+  var blips = [];
+  for (var i = 0; i < 26; i++) {
+    blips.push({ a: rand(i) * Math.PI * 2, r: 0.25 + rand(i + 50) * 0.72, s: 1 + rand(i + 100) * 2.2 });
+  }
+
+  function resize() {
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx = W * 0.78; cy = H * 0.42;
+    maxR = Math.max(W, H) * 0.52;
+  }
+
+  function drawStatic() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(143,212,193,0.14)';
+    ctx.lineWidth = 1;
+    for (var k = 1; k <= 4; k++) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, maxR * k / 4, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(cx - maxR, cy); ctx.lineTo(cx + maxR, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy - maxR); ctx.lineTo(cx, cy + maxR); ctx.stroke();
+  }
+
+  var sweep = 0;
+  function frame() {
+    drawStatic();
+    sweep += 0.007;
+    // fading trail behind the sweep line
+    for (var t = 0; t < 40; t++) {
+      var a = sweep - t * 0.012;
+      ctx.strokeStyle = 'rgba(143,212,193,' + (0.10 * (1 - t / 40)) + ')';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a) * maxR, cy + Math.sin(a) * maxR);
+      ctx.stroke();
+    }
+    // blips glow when the sweep passes them
+    for (var i = 0; i < blips.length; i++) {
+      var b = blips[i];
+      var d = (sweep - b.a) % (Math.PI * 2);
+      if (d < 0) d += Math.PI * 2;
+      var glow = Math.max(0, 1 - d / 1.6);
+      var x = cx + Math.cos(b.a) * b.r * maxR;
+      var y = cy + Math.sin(b.a) * b.r * maxR;
+      ctx.fillStyle = 'rgba(143,212,193,' + (0.08 + glow * 0.8) + ')';
+      ctx.beginPath();
+      ctx.arc(x, y, b.s + glow * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  window.addEventListener('resize', function () { resize(); if (reduced) staticScene(); });
+
+  function staticScene() {
+    drawStatic();
+    for (var i = 0; i < blips.length; i++) {
+      var b = blips[i];
+      ctx.fillStyle = 'rgba(143,212,193,0.5)';
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(b.a) * b.r * maxR, cy + Math.sin(b.a) * b.r * maxR, b.s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  if (reduced) { staticScene(); } else { requestAnimationFrame(frame); }
+})();
+</script>
