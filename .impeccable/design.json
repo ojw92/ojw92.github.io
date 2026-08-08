@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-08T00:00:00Z",
+  "title": "Design System: Ahab",
+  "extensions": {
+    "colorMeta": {
+      "night": { "role": "neutral", "displayName": "Night", "canonical": "#071522", "tonalRamp": ["#050f18", "#071522", "#0B2233", "#12263A", "#3D5266", "#8FA3A8", "#C4D2CC", "#E8EFEA"] },
+      "night-2": { "role": "neutral", "displayName": "Night Deep 2", "canonical": "#0B2233", "tonalRamp": ["#050f18", "#071522", "#0B2233", "#12263A", "#3D5266", "#8FA3A8", "#C4D2CC", "#E8EFEA"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#12263A", "tonalRamp": ["#071522", "#0B2233", "#12263A", "#3D5266", "#6B7E8C", "#9FB0A6", "#C9CFC4", "#F6F4ED"] },
+      "ink-soft": { "role": "neutral", "displayName": "Ink Soft", "canonical": "#3D5266", "tonalRamp": ["#12263A", "#22384D", "#3D5266", "#5C7080", "#8298A0", "#A9BCB4", "#C9CFC4", "#F6F4ED"] },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#F6F4ED", "tonalRamp": ["#C9CFC4", "#D9D6C9", "#E5ECE8", "#EFEDE4", "#F6F4ED", "#FAF8F2", "#FCFBF7", "#FFFFFF"] },
+      "water": { "role": "neutral", "displayName": "Water", "canonical": "#E5ECE8", "tonalRamp": ["#8FA3A8", "#A9BCB4", "#C4D2CC", "#D6E0DA", "#E5ECE8", "#EFF3F0", "#F6F8F6", "#FFFFFF"] },
+      "line": { "role": "neutral", "displayName": "Line", "canonical": "#C9CFC4", "tonalRamp": ["#3D5266", "#6B7E8C", "#8FA3A8", "#A9BCB4", "#C9CFC4", "#D9DED4", "#E9ECE5", "#F6F4ED"] },
+      "magenta": { "role": "primary", "displayName": "Harpoon Magenta", "canonical": "#B02A63", "tonalRamp": ["#4A1029", "#701A3E", "#962253", "#B02A63", "#C85685", "#DD8DAE", "#EEC0D3", "#FBE9F0"] },
+      "phosphor": { "role": "secondary", "displayName": "Phosphor Green", "canonical": "#8FD4C1", "tonalRamp": ["#0F3B31", "#1D6152", "#3A9481", "#63B7A5", "#8FD4C1", "#B3E4D8", "#D3F0E8", "#EEF9F5"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero H1 (\"AHAB\") only." },
+      "headline": { "displayName": "Headline", "purpose": "Section H2 titles." },
+      "title": { "displayName": "Title", "purpose": "Subsection H3s: stack terms, learnings, footer heading." },
+      "body": { "displayName": "Body", "purpose": "Article prose, capped at 66-72ch measure." },
+      "label": { "displayName": "Label / Mono", "purpose": "Numbers, log lines, bearings, axis text, nav microcopy — never prose." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "smooth-scroll", "value": "html { scroll-behavior: smooth; } (disabled under prefers-reduced-motion)", "purpose": "In-page anchor navigation from the contents nav." },
+      { "name": "sonar-sweep", "value": "canvas requestAnimationFrame loop, ~0.007 rad/frame sweep with fading trail and blip glow; falls back to a static rendered scene under prefers-reduced-motion", "purpose": "Hero instrument atmosphere; carried over verbatim from the incumbent page." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "760px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Contents Nav Link",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Underlined text link in the flat contents bar under the hero.",
+      "html": "<nav class=\"ds-toc\" aria-label=\"Contents\"><span class=\"ds-toc-label\">In this write-up</span><a class=\"ds-toc-link\" href=\"#problem\">The problem</a></nav>",
+      "css": ".ds-toc { display:flex; flex-wrap:wrap; gap:8px 26px; align-items:baseline; font-family: \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif; } .ds-toc-label { font-family: ui-monospace, \"SF Mono\", Menlo, Consolas, monospace; font-size:12.5px; letter-spacing:0.08em; text-transform:uppercase; color:#3D5266; } .ds-toc-link { font-size:15.5px; color:#12263A; text-decoration:none; border-bottom:1px solid #C9CFC4; } .ds-toc-link:hover, .ds-toc-link:focus-visible { color:#B02A63; border-color:#B02A63; }"
+    },
+    {
+      "name": "Back-Home Link",
+      "kind": "nav",
+      "refersTo": "back-link",
+      "description": "Mono uppercase link over the night hero, the only nav element in the dark register.",
+      "html": "<a class=\"ds-back-link\" href=\"#\">&larr; Jin Woo Oh &middot; Portfolio</a>",
+      "css": ".ds-back-link { font-family: ui-monospace, \"SF Mono\", Menlo, Consolas, monospace; font-size:12.5px; letter-spacing:0.1em; text-transform:uppercase; color:#8FD4C1; text-decoration:none; } .ds-back-link:hover, .ds-back-link:focus-visible { color:#fff; }"
+    },
+    {
+      "name": "Thesis Callout",
+      "kind": "custom",
+      "refersTo": "callout-thesis",
+      "description": "Night-2 statement block used once per article to state the core claim, with a magenta-underlined emphasis span.",
+      "html": "<p class=\"ds-thesis\">Ahab&rsquo;s defining feature isn&rsquo;t the signal it finds. It&rsquo;s that <em>every number it reports has been audited by its own grading system</em>.</p>",
+      "css": ".ds-thesis { margin:40px 0 6px; padding:28px 32px; background:#0B2233; color:#DCE8E1; font-family: \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif; font-size:21px; line-height:1.5; max-width:56ch; } .ds-thesis em { color:#8FD4C1; font-style:normal; border-bottom:2px solid #B02A63; }"
+    },
+    {
+      "name": "Verdict Card Row",
+      "kind": "card",
+      "refersTo": "verdict-row",
+      "description": "Flat Night-2 delta card in a hairline-gapped grid; color-coded gain/loss.",
+      "html": "<div class=\"ds-verdicts\"><div class=\"ds-verdict\"><div class=\"ds-verdict-lens\">COMBINED<small>ensemble</small></div><div class=\"ds-verdict-delta ds-up\">+5.5pp</div></div></div>",
+      "css": ".ds-verdicts { display:flex; flex-direction:column; gap:1px; background:rgba(143,212,193,0.25); border:1px solid rgba(143,212,193,0.25); } .ds-verdict { display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding:14px 18px; background:#0B2233; } .ds-verdict-lens { font-family: ui-monospace, \"SF Mono\", Menlo, Consolas, monospace; font-size:13px; letter-spacing:0.06em; color:#D9E4DE; } .ds-verdict-lens small { color:#7E939B; font-size:12px; display:block; } .ds-verdict-delta { font-family: ui-monospace, \"SF Mono\", Menlo, Consolas, monospace; font-size:17px; font-weight:600; } .ds-up { color:#86CFA9; } .ds-down { color:#E08A76; }"
+    },
+    {
+      "name": "Pull Quote",
+      "kind": "custom",
+      "refersTo": "pull-quote",
+      "description": "Editorial pull-quote on the night register, flagged by a short magenta rule instead of a border or quote glyph.",
+      "html": "<p class=\"ds-pull\">A backtest that flatters you is worse than no backtest at all.</p>",
+      "css": ".ds-pull { margin:38px 0 0; padding-top:18px; position:relative; font-family: \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif; font-size:22px; line-height:1.45; color:#EDF3EF; max-width:30ch; } .ds-pull::before { content:\"\"; position:absolute; top:0; left:0; width:64px; height:3px; background:#B02A63; }"
+    },
+    {
+      "name": "Stack Definition Row",
+      "kind": "custom",
+      "refersTo": "stack-row",
+      "description": "Two-column term/definition row used to document the tech stack, separated by hairlines only.",
+      "html": "<div class=\"ds-stack-row\"><dt class=\"ds-stack-term\">Python</dt><dd class=\"ds-stack-def\">The whole system is one language.</dd></div>",
+      "css": ".ds-stack-row { display:grid; grid-template-columns:210px 1fr; gap:20px; padding:15px 0; border-top:1px solid #C9CFC4; font-family: \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif; } .ds-stack-term { font-family: ui-monospace, \"SF Mono\", Menlo, Consolas, monospace; font-size:13.5px; color:#12263A; font-weight:600; margin:0; padding-top:2px; } .ds-stack-def { margin:0; font-size:15.5px; color:#3D5266; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Instrument Log",
+    "overview": "Ahab reads as a field notebook kept by an instrument, not a brochure written by a marketer. A warm paper reading surface carries long-form serif prose; a night-navy instrument register (hero, the \"hardest bug\" section, footer) breaks in wherever the system is reporting a measurement rather than narrating. Monospace is reserved exclusively for anything that is a literal number, log line, or instrument label — never for body voice. The world is nautical-instrument, not nautical-decorative: the sonar canvas, the mono \"bearing\" markers (I / IV), and the run-manifest log line are the whale-hunt metaphor made functional, not illustrative flourish.\n\nThe build carries this world forward from the incumbent site rather than inventing a new one: the sonar canvas script and the three data-figure SVGs are verbatim incumbent assets, and the same five-token color system anchors both. What changed is the container — a single long-form article page instead of a landing page — so a contents nav, numbered sections, dark/light section alternation, and figure/prose rhythm were added on top of the inherited palette and type voice.",
+    "keyCharacteristics": [
+      "Two registers, not one: warm-paper reading mode (article body) and night-navy instrument mode (hero, challenge section, footer), never blended within a single surface.",
+      "Monospace is a measurement marker, applied only to numbers, log lines, gate labels, and nav/label microcopy — never to headlines or prose.",
+      "Magenta is a rare mark of consequence: first-letter drop caps, the harpoon-line rule under pull quotes, thesis-statement emphasis, \"next\"-list markers.",
+      "Figures are instrument print-outs: SVG charts with monospace axis labels and callouts, not decorative illustration."
+    ],
+    "rules": [
+      { "name": "The Two-Register Rule", "body": "A surface is either paper (warm, serif, editorial) or night (navy, instrument, monospace-accented). No section blends both backgrounds; the transition between registers is always a hard section boundary, never a gradient.", "section": "colors" },
+      { "name": "The Mono-Is-Measurement Rule", "body": "Monospace type marks only things that are literally measured or logged: numbers, log lines, section bearings (I / IV), gate labels, chart axis text, and nav microcopy. It never carries a headline, a sentence of prose, or a decorative label.", "section": "colors" },
+      { "name": "The Drop-Cap Opener Rule", "body": "Only the first paragraph of the first section gets a magenta 64px drop cap. It marks \"the article begins here\" once; it is not a recurring section device.", "section": "typography" },
+      { "name": "The No-Shadow Rule", "body": "Structure is drawn with flat color blocks and hairlines. If a component needs to read as raised, change its background tone (Night → Night-2) rather than adding a shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep monospace confined to numbers, logs, labels, and axis text (the Mono-Is-Measurement Rule).",
+      "Do treat the night/paper split as a hard section boundary (the Two-Register Rule) — never gradient or blend the two.",
+      "Do spend magenta rarely: one thesis callout, drop caps, pull-quote rule, and the specific number a chart wants noticed.",
+      "Do build charts as SVG with mono axis labels and a named data source in the caption, matching the existing three figures.",
+      "Do use flat hairlines and background-tone shifts for hierarchy; never introduce a box-shadow.",
+      "Do cap prose measure at 66-72ch regardless of the outer 1020px wrap."
+    ],
+    "donts": [
+      "Don't add border-radius; the system is edge-to-edge rectilinear with zero rounded corners anywhere in the build.",
+      "Don't add drop shadows or glows outside the sonar canvas's own additive glow effect (which is a canvas-rendered instrument behavior, not a CSS box-shadow token).",
+      "Don't use the serif display face for anything except the hero H1 — section headlines are a smaller weight-600 serif, not the display size.",
+      "Don't introduce a second accent color; magenta and phosphor are each scoped to one register (paper/mixed vs. night) and should not swap registers."
+    ]
+  }
+}

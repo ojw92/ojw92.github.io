@@ -1,0 +1,734 @@
+<title>Ahab — A Nightly Trading-Intelligence System</title>
+<style>
+  :root {
+    --night: #071522;
+    --night-2: #0B2233;
+    --ink: #12263A;
+    --ink-soft: #3D5266;
+    --paper: #F6F4ED;
+    --water: #E5ECE8;
+    --line: #C9CFC4;
+    --magenta: #B02A63;
+    --phosphor: #8FD4C1;
+    --long: #2E7D5B;
+    --short: #B3402E;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.65;
+    margin: 0;
+  }
+  a { color: var(--magenta); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--magenta); outline-offset: 3px;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 28px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--magenta); font-weight: 600;
+  }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  h2 { font-size: 34px; font-weight: 600; line-height: 1.2; margin: 10px 0 14px; }
+  h3 { font-size: 20px; font-weight: 600; }
+  p { margin: 0; }
+  .prose { max-width: 62ch; }
+  .prose p + p { margin-top: 1em; }
+  section { padding: 84px 0; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- HERO ---------- */
+  header.hero {
+    position: relative; overflow: hidden;
+    background: var(--night); color: #E8EFEA;
+  }
+  #sonar { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .hero-inner {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; justify-content: center;
+    min-height: 88vh; padding: 90px 0 70px;
+  }
+  .hero .eyebrow { color: var(--phosphor); }
+  .hero h1 {
+    font-size: clamp(64px, 11vw, 128px); font-weight: 600;
+    letter-spacing: 0.04em; line-height: 1; margin: 18px 0 8px;
+  }
+  .hero .tag {
+    font-size: clamp(19px, 2.4vw, 24px); max-width: 34ch;
+    color: #C4D2CC; line-height: 1.45; text-wrap: balance;
+  }
+  .hero-stats {
+    display: flex; flex-wrap: wrap; gap: 12px 40px;
+    margin-top: 56px; padding-top: 22px;
+    border-top: 1px solid rgba(143, 212, 193, 0.25);
+  }
+  .hero-stats div { font-family: var(--mono); font-size: 13px; }
+  .hero-stats b { display: block; font-size: 22px; font-weight: 600; color: var(--phosphor); }
+  .hero-stats span { color: #8FA3A8; letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; }
+
+  /* ---------- SENSOR CARDS ---------- */
+  .sensors { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 40px; }
+  .sensor {
+    background: var(--water); border: 1px solid var(--line);
+    padding: 26px 26px 30px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .sensor .glyph { font-family: var(--mono); font-size: 12px; color: var(--magenta); letter-spacing: 0.15em; }
+  .sensor p { font-size: 15.5px; color: var(--ink-soft); }
+  .thesis {
+    margin-top: 44px; padding: 30px 34px;
+    background: var(--night-2); color: #DCE8E1;
+    font-size: 21px; line-height: 1.5; max-width: 100%;
+  }
+  .thesis em { color: var(--phosphor); font-style: normal; border-bottom: 2px solid var(--magenta); }
+
+  /* ---------- PIPELINE ---------- */
+  .band { background: var(--water); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .pipeline { display: flex; gap: 0; margin-top: 42px; overflow-x: auto; padding-bottom: 12px; }
+  .step { min-width: 190px; flex: 1; padding: 0 22px 0 0; position: relative; }
+  .step + .step { padding-left: 22px; border-left: 1px dashed #9FB0A6; }
+  .step time { font-family: var(--mono); font-size: 12px; color: var(--magenta); letter-spacing: 0.1em; }
+  .step h3 { font-size: 17px; margin: 8px 0 6px; }
+  .step p { font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+  /* ---------- CASE STUDY ---------- */
+  .audit { background: var(--night); color: #D9E4DE; }
+  .audit .eyebrow { color: var(--phosphor); }
+  .audit h2 { color: #F0F5F1; max-width: 22ch; }
+  .audit .prose { color: #B9C9C2; }
+  .audit .prose strong { color: #F0F5F1; }
+  .audit-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: start; }
+  .verdicts { display: flex; flex-direction: column; gap: 1px; background: rgba(143,212,193,0.25); border: 1px solid rgba(143,212,193,0.25); }
+  .verdict { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 14px 18px; background: var(--night-2); }
+  .verdict .lens { font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; }
+  .verdict .delta { font-family: var(--mono); font-size: 17px; font-weight: 600; }
+  .delta.down { color: #E08A76; }
+  .delta.up { color: #86CFA9; }
+  .verdict small { color: #7E939B; font-size: 12px; display: block; }
+  .audit-note { font-family: var(--mono); font-size: 12px; color: #7E939B; margin-top: 14px; line-height: 1.6; }
+  .pull {
+    margin: 34px 0 0; padding-left: 22px; border-left: 3px solid var(--magenta);
+    font-size: 22px; line-height: 1.45; color: #EDF3EF; max-width: 30ch; text-wrap: balance;
+  }
+
+  /* ---------- CHARTS ---------- */
+  figure.chart { margin: 44px 0 0; padding: 0; }
+  figure.chart svg { width: 100%; height: auto; display: block; }
+  figure.chart figcaption {
+    margin-top: 16px; font-size: 14.5px; color: var(--ink-soft);
+    max-width: 68ch; line-height: 1.55;
+  }
+  figure.chart figcaption code { font-family: var(--mono); font-size: 13px; }
+
+  /* ---------- HIGHLIGHTS ---------- */
+  .hl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 42px; }
+  .hl { background: var(--paper); padding: 26px 28px 30px; }
+  .hl h3 { font-size: 17px; margin-bottom: 8px; }
+  .hl p { font-size: 15px; color: var(--ink-soft); }
+  .hl .glyph { font-family: var(--mono); color: var(--magenta); font-size: 12px; letter-spacing: 0.12em; display: block; margin-bottom: 12px; }
+
+  /* ---------- LOG EXCERPT ---------- */
+  .terminal {
+    background: var(--night); color: #C9D8D1; border-radius: 2px;
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.7;
+    padding: 26px 30px; overflow-x: auto; margin-top: 38px;
+  }
+  .terminal .cmt { color: #6E848D; }
+  .terminal .tick { color: var(--phosphor); font-weight: 600; }
+  .terminal .pos { color: #86CFA9; }
+  .terminal .neg { color: #E08A76; }
+  .terminal .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- DEVLOG ---------- */
+  .log-list { margin-top: 38px; display: flex; flex-direction: column; }
+  .log-entry {
+    display: grid; grid-template-columns: 150px 1fr; gap: 24px;
+    padding: 22px 0; border-top: 1px solid var(--line); align-items: baseline;
+  }
+  .log-entry:last-child { border-bottom: 1px solid var(--line); }
+  .log-entry time { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); }
+  .log-entry h3 { font-size: 18px; }
+  .log-entry h3 a { color: var(--ink); text-decoration: none; }
+  .log-entry h3 a:hover { color: var(--magenta); }
+  .log-entry p { font-size: 15px; color: var(--ink-soft); margin-top: 4px; }
+
+  /* ---------- DETAILS / LAYERING ---------- */
+  details { margin-top: 18px; max-width: 62ch; }
+  summary {
+    cursor: pointer; font-family: var(--mono); font-size: 12.5px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--magenta);
+  }
+  details > div { margin-top: 12px; font-size: 15.5px; color: var(--ink-soft); }
+
+  /* ---------- FOOTER ---------- */
+  footer { background: var(--night); color: #A9BCB4; padding: 70px 0 50px; }
+  footer .wrap { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 48px; }
+  footer h2 { color: #EDF3EF; font-size: 26px; }
+  footer p { font-size: 15.5px; max-width: 52ch; }
+  footer .links { font-family: var(--mono); font-size: 14px; display: flex; flex-direction: column; gap: 10px; }
+  footer .links a { color: var(--phosphor); }
+  .disclaimer {
+    grid-column: 1 / -1; margin-top: 40px; padding-top: 20px;
+    border-top: 1px solid rgba(143,212,193,0.2);
+    font-family: var(--mono); font-size: 11.5px; color: #64787F; line-height: 1.7;
+  }
+
+  @media (max-width: 760px) {
+    section { padding: 60px 0; }
+    .audit-grid, footer .wrap { grid-template-columns: 1fr; gap: 32px; }
+    .log-entry { grid-template-columns: 1fr; gap: 4px; }
+    .hero-inner { min-height: 72vh; }
+  }
+  .backhome {
+    position: absolute; top: 26px; left: 0; right: 0; z-index: 2;
+  }
+  .backhome a {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--phosphor); text-decoration: none;
+  }
+  .backhome a:hover { color: #fff; }
+</style>
+
+<header class="hero">
+  <canvas id="sonar" aria-hidden="true"></canvas>
+  <div class="wrap backhome"><a href="/">← Jin Woo Oh · Portfolio</a></div>
+  <div class="wrap hero-inner">
+    <span class="eyebrow">Personal project · Python · 2026</span>
+    <h1>AHAB</h1>
+    <p class="tag">A nightly trading-intelligence system that hunts institutional
+      "whales" in market data — and grades its own predictions honestly.</p>
+    <div class="hero-stats">
+      <div><b class="num">57,000+</b><span>congressional trades scored</span></div>
+      <div><b class="num">212</b><span>symbols scanned nightly</span></div>
+      <div><b class="num">4,067</b><span>predictions graded &amp; audited</span></div>
+      <div><b class="num">$0<span style="font-size:14px">/mo</span></b><span>infrastructure cost</span></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">What it does</span>
+    <h2>Two independent sensors, one signal</h2>
+    <div class="prose">
+      <p>Members of the U.S. Congress are required by law to disclose their stock
+        trades — and some of them are suspiciously good at it. Separately, when
+        institutional money moves, it leaves footprints: abnormally large trades
+        that stand out from everyday retail churn. Ahab watches both, every night,
+        and cross-references them.</p>
+    </div>
+    <div class="sensors">
+      <div class="sensor">
+        <span class="glyph">SENSOR 01 — DISCLOSURES</span>
+        <h3>The congressional radar</h3>
+        <p>Downloads every STOCK Act disclosure back to 2012 (~57,000 trades),
+          computes risk-adjusted returns per politician, and assigns each a tier
+          from S (elite) to F. When multiple high-tier officials buy the same
+          stock within 30 days, that convergence gets flagged and ranked.</p>
+      </div>
+      <div class="sensor">
+        <span class="glyph">SENSOR 02 — LIVE FLOW</span>
+        <h3>The whale sonar</h3>
+        <p>Scans stocks and crypto for concentrated order flow — single enormous
+          prints against a sea of small retail trades. Separates "whale"
+          footprints from crowd noise, tracks accumulation vs. distribution per
+          symbol, and reads the market regime from index-level flow.</p>
+      </div>
+      <div class="sensor">
+        <span class="glyph">SENSOR 03 — SYNTHESIS</span>
+        <h3>The interpreter</h3>
+        <p>An LLM reads the night's volume anomalies, calibration history, and
+          news handoff, then writes the morning report in plain English — what
+          moved, what it likely means, and how confident to be, with every claim
+          traceable to the underlying data files.</p>
+      </div>
+    </div>
+    <p class="thesis">Think of it as a radar system with two independent sensors:
+      one tracks what informed politicians are doing, the other tracks what
+      institutional money is doing right now. <em>When both light up on the same
+      stock, that's the strongest signal.</em></p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <span class="eyebrow">How a night runs</span>
+    <h2>The pipeline, from close to coffee</h2>
+    <div class="prose">
+      <p>Everything runs unattended on a schedule. By the time the operator wakes
+        up, the system has scanned, graded yesterday's calls, recalibrated, and
+        written its report.</p>
+    </div>
+    <div class="pipeline">
+      <div class="step">
+        <time>22:00</time>
+        <h3>Scan</h3>
+        <p>Pull the day's bars and prints for 212 symbols; detect concentrated
+          volume anomalies against per-symbol baselines.</p>
+      </div>
+      <div class="step">
+        <time>22:20</time>
+        <h3>Grade</h3>
+        <p>Score every previous prediction against what the market actually did —
+          using a next-day anchor so the system can't credit itself for moves it
+          couldn't have traded.</p>
+      </div>
+      <div class="step">
+        <time>22:40</time>
+        <h3>Calibrate</h3>
+        <p>Update confidence curves from the full grading history, so a "70%"
+          from the system means 70% — not enthusiasm.</p>
+      </div>
+      <div class="step">
+        <time>23:00</time>
+        <h3>Interpret</h3>
+        <p>The LLM reads the volume, calibration, and news handoff files and
+          writes the narrative morning report.</p>
+      </div>
+      <div class="step">
+        <time>07:00</time>
+        <h3>Report</h3>
+        <p>Markdown report + alerts, with a run manifest listing every file the
+          night's analysis touched.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Sensor 01, under the microscope</span>
+    <h2>Which politicians can actually trade?</h2>
+    <div class="prose">
+      <p>Before the congressional radar can rank anyone, it has to answer an
+        uncomfortable statistical question: with only a handful of disclosed
+        trades per filer, how do you separate skill from luck? The answer is a
+        funnel. Plot every filer's risk-adjusted return against the number of
+        trades backing it, and shade the region where a zero-skill trader
+        lands by chance alone. Most of Congress never leaves that region. The
+        tier system only trusts what does: 253 scored buys landing at seven
+        standard deviations is a pattern; a 100% win rate on six trades is a
+        Tuesday.</p>
+    </div>
+    <figure class="chart">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 520"><title>Congressional filers: evidence vs modified Sharpe, with the ±2/√n luck funnel</title><line x1="64.0" y1="30" x2="64.0" y2="442" stroke="#C9CFC4" stroke-width="1"/><text x="64.0" y="462.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">1</text><line x1="161.7" y1="30" x2="161.7" y2="442" stroke="#C9CFC4" stroke-width="1"/><text x="161.7" y="462.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">3</text><line x1="268.8" y1="30" x2="268.8" y2="442" stroke="#C9CFC4" stroke-width="1"/><text x="268.8" y="462.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">10</text><line x1="366.5" y1="30" x2="366.5" y2="442" stroke="#C9CFC4" stroke-width="1"/><text x="366.5" y="462.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">30</text><line x1="473.6" y1="30" x2="473.6" y2="442" stroke="#C9CFC4" stroke-width="1"/><text x="473.6" y="462.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">100</text><line x1="571.3" y1="30" x2="571.3" y2="442" stroke="#C9CFC4" stroke-width="1"/><text x="571.3" y="462.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">300</text><line x1="678.4" y1="30" x2="678.4" y2="442" stroke="#C9CFC4" stroke-width="1"/><text x="678.4" y="462.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">1000</text><line x1="64" y1="417.8" x2="740" y2="417.8" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="421.8" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">-1.5</text><line x1="64" y1="357.2" x2="740" y2="357.2" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="361.2" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">-1.0</text><line x1="64" y1="296.6" x2="740" y2="296.6" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="300.6" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">-0.5</text><line x1="64" y1="236.0" x2="740" y2="236.0" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="240.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">0</text><line x1="64" y1="175.4" x2="740" y2="175.4" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="179.4" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">+0.5</text><line x1="64" y1="114.8" x2="740" y2="114.8" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="118.8" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">+1.0</text><line x1="64" y1="54.2" x2="740" y2="54.2" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="58.2" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">+1.5</text><text x="402.0" y="484.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#3D5266" text-anchor="middle" letter-spacing="0.06em">scored purchases (evidence, log scale)</text><text x="0.0" y="0.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#3D5266" text-anchor="middle" letter-spacing="0.06em" transform="translate(16 236.0) rotate(-90)">modified Sharpe (per-trade skill)</text><polygon points="64.0,30.0 72.5,30.0 80.9,30.0 89.4,30.0 97.8,35.6 106.2,44.9 114.7,53.8 123.2,62.2 131.6,70.3 140.1,78.0 148.5,85.3 156.9,92.3 165.4,99.0 173.9,105.3 182.3,111.4 190.8,117.2 199.2,122.7 207.7,127.9 216.1,132.9 224.6,137.7 233.0,142.3 241.5,146.6 249.9,150.8 258.4,154.7 266.8,158.5 275.2,162.1 283.7,165.5 292.1,168.8 300.6,171.9 309.0,174.9 317.5,177.7 325.9,180.4 334.4,183.0 342.9,185.5 351.3,187.8 359.8,190.0 368.2,192.2 376.6,194.2 385.1,196.1 393.6,198.0 402.0,199.8 410.4,201.4 418.9,203.0 427.3,204.6 435.8,206.0 444.2,207.4 452.7,208.7 461.2,210.0 469.6,211.2 478.0,212.4 486.5,213.5 495.0,214.5 503.4,215.5 511.8,216.5 520.3,217.4 528.8,218.2 537.2,219.1 545.7,219.8 554.1,220.6 562.5,221.3 571.0,222.0 579.5,222.6 587.9,223.3 596.4,223.8 604.8,224.4 613.2,224.9 621.7,225.5 630.1,226.0 638.6,226.4 647.0,226.9 655.5,227.3 664.0,227.7 672.4,228.1 680.9,228.4 689.3,228.8 697.8,229.1 706.2,229.4 714.6,229.8 723.1,230.0 731.6,230.3 740.0,230.6 740.0,241.4 731.6,241.7 723.1,242.0 714.6,242.2 706.2,242.6 697.8,242.9 689.3,243.2 680.9,243.6 672.4,243.9 664.0,244.3 655.5,244.7 647.0,245.1 638.6,245.6 630.1,246.0 621.7,246.5 613.2,247.1 604.8,247.6 596.4,248.2 587.9,248.7 579.5,249.4 571.0,250.0 562.5,250.7 554.1,251.4 545.7,252.2 537.2,252.9 528.8,253.8 520.3,254.6 511.8,255.5 503.4,256.5 495.0,257.5 486.5,258.5 478.0,259.6 469.6,260.8 461.2,262.0 452.7,263.3 444.2,264.6 435.8,266.0 427.3,267.4 418.9,269.0 410.4,270.6 402.0,272.2 393.6,274.0 385.1,275.9 376.6,277.8 368.2,279.8 359.8,282.0 351.3,284.2 342.9,286.5 334.4,289.0 325.9,291.6 317.5,294.3 309.0,297.1 300.6,300.1 292.1,303.2 283.7,306.5 275.2,309.9 266.8,313.5 258.4,317.3 249.9,321.2 241.5,325.4 233.0,329.7 224.6,334.3 216.1,339.1 207.7,344.1 199.2,349.3 190.8,354.8 182.3,360.6 173.9,366.7 165.4,373.0 156.9,379.7 148.5,386.7 140.1,394.0 131.6,401.7 123.2,409.8 114.7,418.2 106.2,427.1 97.8,436.4 89.4,442.0 80.9,442.0 72.5,442.0 64.0,442.0" fill="#C9CFC4" fill-opacity="0.34"/><polyline points="64.0,30.0 72.5,30.0 80.9,30.0 89.4,30.0 97.8,35.6 106.2,44.9 114.7,53.8 123.2,62.2 131.6,70.3 140.1,78.0 148.5,85.3 156.9,92.3 165.4,99.0 173.9,105.3 182.3,111.4 190.8,117.2 199.2,122.7 207.7,127.9 216.1,132.9 224.6,137.7 233.0,142.3 241.5,146.6 249.9,150.8 258.4,154.7 266.8,158.5 275.2,162.1 283.7,165.5 292.1,168.8 300.6,171.9 309.0,174.9 317.5,177.7 325.9,180.4 334.4,183.0 342.9,185.5 351.3,187.8 359.8,190.0 368.2,192.2 376.6,194.2 385.1,196.1 393.6,198.0 402.0,199.8 410.4,201.4 418.9,203.0 427.3,204.6 435.8,206.0 444.2,207.4 452.7,208.7 461.2,210.0 469.6,211.2 478.0,212.4 486.5,213.5 495.0,214.5 503.4,215.5 511.8,216.5 520.3,217.4 528.8,218.2 537.2,219.1 545.7,219.8 554.1,220.6 562.5,221.3 571.0,222.0 579.5,222.6 587.9,223.3 596.4,223.8 604.8,224.4 613.2,224.9 621.7,225.5 630.1,226.0 638.6,226.4 647.0,226.9 655.5,227.3 664.0,227.7 672.4,228.1 680.9,228.4 689.3,228.8 697.8,229.1 706.2,229.4 714.6,229.8 723.1,230.0 731.6,230.3 740.0,230.6" fill="none" stroke="#3D5266" stroke-width="1" stroke-dasharray="5 4" opacity="0.7"/><polyline points="64.0,442.0 72.5,442.0 80.9,442.0 89.4,442.0 97.8,436.4 106.2,427.1 114.7,418.2 123.2,409.8 131.6,401.7 140.1,394.0 148.5,386.7 156.9,379.7 165.4,373.0 173.9,366.7 182.3,360.6 190.8,354.8 199.2,349.3 207.7,344.1 216.1,339.1 224.6,334.3 233.0,329.7 241.5,325.4 249.9,321.2 258.4,317.3 266.8,313.5 275.2,309.9 283.7,306.5 292.1,303.2 300.6,300.1 309.0,297.1 317.5,294.3 325.9,291.6 334.4,289.0 342.9,286.5 351.3,284.2 359.8,282.0 368.2,279.8 376.6,277.8 385.1,275.9 393.6,274.0 402.0,272.2 410.4,270.6 418.9,269.0 427.3,267.4 435.8,266.0 444.2,264.6 452.7,263.3 461.2,262.0 469.6,260.8 478.0,259.6 486.5,258.5 495.0,257.5 503.4,256.5 511.8,255.5 520.3,254.6 528.8,253.8 537.2,252.9 545.7,252.2 554.1,251.4 562.5,250.7 571.0,250.0 579.5,249.4 587.9,248.7 596.4,248.2 604.8,247.6 613.2,247.1 621.7,246.5 630.1,246.0 638.6,245.6 647.0,245.1 655.5,244.7 664.0,244.3 672.4,243.9 680.9,243.6 689.3,243.2 697.8,242.9 706.2,242.6 714.6,242.2 723.1,242.0 731.6,241.7 740.0,241.4" fill="none" stroke="#3D5266" stroke-width="1" stroke-dasharray="5 4" opacity="0.7"/><line x1="64" y1="236.0" x2="740" y2="236.0" stroke="#12263A" stroke-width="1.2"/><circle cx="207.1" cy="68.6" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="369.4" cy="165.8" r="5.0" fill="#B02A63" fill-opacity="1.0"/><circle cx="342.9" cy="177.7" r="5.0" fill="#B02A63" fill-opacity="1.0"/><circle cx="556.1" cy="180.8" r="5.0" fill="#B02A63" fill-opacity="1.0"/><circle cx="400.6" cy="182.3" r="5.0" fill="#B02A63" fill-opacity="1.0"/><circle cx="259.4" cy="182.6" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="259.4" cy="185.7" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="268.8" cy="187.5" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="298.7" cy="189.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="520.8" cy="191.6" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="298.7" cy="192.0" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="304.8" cy="192.9" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="304.8" cy="193.2" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="248.9" cy="198.2" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="503.5" cy="200.3" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="346.6" cy="200.5" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="425.1" cy="203.4" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="431.1" cy="204.6" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="207.1" cy="205.4" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="562.6" cy="208.4" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="562.9" cy="209.4" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="223.4" cy="209.5" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="476.2" cy="210.4" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="608.9" cy="211.1" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="285.0" cy="211.7" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="207.1" cy="212.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="502.9" cy="213.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="330.4" cy="213.2" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="598.4" cy="214.0" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="522.8" cy="214.4" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="418.8" cy="215.8" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="392.1" cy="217.0" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="363.5" cy="217.4" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="372.2" cy="218.9" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="526.3" cy="219.0" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="285.0" cy="220.2" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="520.8" cy="220.5" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="387.5" cy="221.0" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="392.1" cy="221.3" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="448.0" cy="225.5" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="439.3" cy="227.7" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="571.3" cy="228.5" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="462.2" cy="228.8" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="310.6" cy="229.4" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="529.2" cy="229.8" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="491.3" cy="230.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="298.7" cy="230.2" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="330.4" cy="230.6" r="4.0" fill="#12263A" fill-opacity="0.9"/><circle cx="548.0" cy="231.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="385.1" cy="231.2" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="451.5" cy="231.9" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="592.8" cy="231.9" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="503.5" cy="231.9" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="449.2" cy="233.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="298.7" cy="234.3" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="488.3" cy="235.6" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="587.5" cy="235.9" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="642.9" cy="236.0" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="187.3" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="161.7" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="125.6" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="64.0" cy="236.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="408.3" cy="236.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="582.7" cy="236.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="586.2" cy="236.6" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="482.9" cy="237.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="695.8" cy="237.5" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="477.1" cy="238.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="223.4" cy="239.0" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="466.2" cy="239.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="350.3" cy="239.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="237.1" cy="239.5" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="467.1" cy="239.9" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="498.3" cy="240.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="387.5" cy="240.7" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="702.8" cy="240.8" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="512.0" cy="241.9" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="486.0" cy="242.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="450.3" cy="242.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="330.4" cy="242.6" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="529.7" cy="242.9" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="418.8" cy="243.7" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="404.5" cy="244.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="470.9" cy="245.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="616.2" cy="245.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="237.1" cy="246.8" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="438.0" cy="247.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="372.2" cy="247.9" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="342.9" cy="248.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="620.2" cy="249.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="400.6" cy="249.7" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="542.5" cy="250.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="502.9" cy="250.8" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="423.6" cy="251.6" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="491.3" cy="252.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="423.6" cy="252.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="285.0" cy="255.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="268.8" cy="256.7" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="521.3" cy="257.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="462.2" cy="257.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="489.8" cy="258.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="389.8" cy="258.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="514.8" cy="258.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="601.8" cy="259.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="338.9" cy="260.5" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="513.1" cy="262.6" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="455.9" cy="262.8" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="453.7" cy="263.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="530.2" cy="263.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="207.1" cy="263.4" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="451.5" cy="264.5" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="350.3" cy="265.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="382.7" cy="267.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="334.8" cy="267.7" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="415.4" cy="267.9" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="486.8" cy="268.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="533.0" cy="269.8" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="569.5" cy="274.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="321.1" cy="274.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="485.2" cy="274.9" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="417.1" cy="276.7" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="551.8" cy="277.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="304.8" cy="277.0" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="468.1" cy="278.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="338.9" cy="280.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="570.7" cy="280.9" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="223.4" cy="282.0" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="592.3" cy="283.5" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="223.4" cy="283.6" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="431.1" cy="283.8" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="513.1" cy="283.9" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="509.6" cy="286.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="452.6" cy="287.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="411.9" cy="288.8" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="581.1" cy="290.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="392.1" cy="290.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="466.2" cy="292.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="237.1" cy="292.4" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="207.1" cy="293.2" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="429.6" cy="298.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="483.6" cy="299.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="610.8" cy="299.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="372.2" cy="299.7" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="443.1" cy="301.0" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="423.6" cy="305.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="394.3" cy="310.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="441.8" cy="311.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="316.0" cy="312.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="410.1" cy="318.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="237.1" cy="319.5" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="325.9" cy="319.9" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="366.5" cy="321.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="207.1" cy="322.8" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="380.2" cy="323.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="624.2" cy="325.9" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="259.4" cy="330.5" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="382.7" cy="331.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="432.5" cy="332.2" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="502.9" cy="332.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="493.4" cy="332.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="413.7" cy="334.7" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="369.4" cy="335.6" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="377.6" cy="339.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="394.3" cy="339.5" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="277.3" cy="342.9" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="207.1" cy="351.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="402.6" cy="358.8" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="507.2" cy="369.5" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="369.4" cy="370.4" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="285.0" cy="372.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="259.4" cy="381.7" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="520.2" cy="382.5" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="369.4" cy="383.3" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="353.8" cy="385.6" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="207.1" cy="387.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="259.4" cy="389.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="268.8" cy="389.1" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="321.1" cy="397.8" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="375.0" cy="417.6" r="2.4" fill="#8A9890" fill-opacity="0.7"/><circle cx="207.1" cy="424.6" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="207.1" cy="424.7" r="3.0" fill="#3D5266" fill-opacity="0.8"/><circle cx="387.5" cy="441.1" r="2.4" fill="#8A9890" fill-opacity="0.7"/><path d="M 406.9 437.0 L 416.9 437.0 L 411.9 444.0 Z" fill="none" stroke="#B3402E" stroke-width="1.2"/><path d="M 232.1 437.0 L 242.1 437.0 L 237.1 444.0 Z" fill="none" stroke="#B3402E" stroke-width="1.2"/><path d="M 202.1 437.0 L 212.1 437.0 L 207.1 444.0 Z" fill="none" stroke="#B3402E" stroke-width="1.2"/><path d="M 445.3 437.0 L 455.3 437.0 L 450.3 444.0 Z" fill="none" stroke="#B3402E" stroke-width="1.2"/><path d="M 316.1 437.0 L 326.1 437.0 L 321.1 444.0 Z" fill="none" stroke="#B3402E" stroke-width="1.2"/><path d="M 218.4 437.0 L 228.4 437.0 L 223.4 444.0 Z" fill="none" stroke="#B3402E" stroke-width="1.2"/><path d="M 345.3 437.0 L 355.3 437.0 L 350.3 444.0 Z" fill="none" stroke="#B3402E" stroke-width="1.2"/><text x="556.1" y="105.1" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#B02A63" text-anchor="middle" font-weight="600">Mark Green</text><text x="556.1" y="120.1" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#B02A63" text-anchor="middle">z ≈ +7 on 253 buys</text><line x1="556.1" y1="131.8" x2="556.1" y2="171.8" stroke="#B02A63" stroke-width="1" opacity="0.6"/><text x="618.9" y="215.1" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#12263A" text-anchor="start" font-weight="600">M. T. Greene</text><text x="467.2" y="214.4" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#12263A" text-anchor="end" font-weight="600">Pelosi — barely clears the band</text><text x="350.3" y="434.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#B3402E" text-anchor="middle" font-weight="600">McCormick — −9.7, off scale ↓</text><text x="90.7" y="63.9" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start">inside the shaded funnel, a zero-skill trader</text><text x="90.7" y="79.9" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start">lands by luck alone (±2/√n).</text><text x="90.7" y="95.9" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start" font-weight="600">two-thirds of scorable filers never leave it.</text><circle cx="502" cy="42" r="5.0" fill="#B02A63" fill-opacity="1.0"/><text x="511.0" y="46.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="start">S-tier</text><circle cx="560" cy="42" r="4.0" fill="#12263A" fill-opacity="0.9"/><text x="569.0" y="46.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="start">A-tier</text><circle cx="618" cy="42" r="3.0" fill="#3D5266" fill-opacity="0.8"/><text x="627.0" y="46.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="start">B-tier</text><circle cx="676" cy="42" r="2.4" fill="#8A9890" fill-opacity="0.7"/><text x="685.0" y="46.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="start">F / unranked</text><text x="740.0" y="508.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="end">sharpe-scores.json · 259 of 430 filers scorable · funnel = ±2/√n (empirical median se·√n = 1.02) · regenerated 2026-07-17</text></svg>
+      <figcaption>Modified Sharpe vs. scored purchases for the 259 scorable
+        filers (of 430 ingested), from the congressional leaderboard build.
+        The band is <code>±2/√n</code> — and the bootstrap standard errors
+        back it up (median <code>se·√n</code> = 1.02). One honest caveat: the
+        band assumes independent trades, and filers who rebuy the same names
+        are more correlated than that, so "outside the funnel" is an upper
+        bound on skill. Note both tails are populated — skill exists, and so
+        does its opposite.</figcaption>
+    </figure>
+
+    <div class="prose" style="margin-top:64px">
+      <h3>The conspiracy that wasn't</h3>
+      <p style="margin-top:10px">The folk theory writes itself: the filers who
+        disclose latest must be hiding the best trades. I built this chart
+        expecting to publish a small scandal. The data declined — the rank
+        correlation between disclosure lag and excess return is
+        <strong>−0.20</strong>, and the chronic late filers actually do
+        slightly <em>worse</em>. A null result is still a result: the radar
+        weights <em>who</em> is buying and whether high-tier filers converge,
+        and ignores lateness entirely.</p>
+    </div>
+    <figure class="chart">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 470"><title>Disclosure lag vs excess return: no relationship</title><line x1="125.6" y1="30" x2="125.6" y2="392" stroke="#C9CFC4" stroke-width="1"/><text x="125.6" y="412.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">1d</text><line x1="298.7" y1="30" x2="298.7" y2="392" stroke="#C9CFC4" stroke-width="1"/><text x="298.7" y="412.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">1wk</text><line x1="464.2" y1="30" x2="464.2" y2="392" stroke="#C9CFC4" stroke-width="1"/><text x="464.2" y="412.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">45d</text><line x1="525.8" y1="30" x2="525.8" y2="392" stroke="#C9CFC4" stroke-width="1"/><text x="525.8" y="412.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">90d</text><line x1="650.4" y1="30" x2="650.4" y2="392" stroke="#C9CFC4" stroke-width="1"/><text x="650.4" y="412.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">1yr</text><line x1="712.0" y1="30" x2="712.0" y2="392" stroke="#C9CFC4" stroke-width="1"/><text x="712.0" y="412.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">2yr</text><line x1="64" y1="385.0" x2="740" y2="385.0" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="389.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">-100%</text><line x1="64" y1="315.4" x2="740" y2="315.4" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="319.4" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">0</text><line x1="64" y1="245.8" x2="740" y2="245.8" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="249.8" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">+100%</text><line x1="64" y1="176.2" x2="740" y2="176.2" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="180.2" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">+200%</text><line x1="64" y1="106.6" x2="740" y2="106.6" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="110.6" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">+300%</text><line x1="64" y1="37.0" x2="740" y2="37.0" stroke="#C9CFC4" stroke-width="1"/><text x="56.0" y="41.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">+400%</text><text x="402.0" y="434.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#3D5266" text-anchor="middle" letter-spacing="0.06em">average disclosure lag (log scale)</text><text x="0.0" y="0.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#3D5266" text-anchor="middle" letter-spacing="0.06em" transform="translate(16 211.0) rotate(-90)">average excess return per trade</text><line x1="64" y1="315.4" x2="740" y2="315.4" stroke="#12263A" stroke-width="1.2"/><line x1="464.2" y1="30" x2="464.2" y2="392" stroke="#B3402E" stroke-width="1.2" stroke-dasharray="6 4"/><text x="470.2" y="44.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#B3402E" text-anchor="start">STOCK Act deadline —</text><text x="470.2" y="58.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#B3402E" text-anchor="start">right of here = filed late</text><circle cx="351.0" cy="165.1" r="3.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="425.1" cy="101.3" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="362.2" cy="260.4" r="5.1" fill="#3D5266" fill-opacity="0.5"/><path d="M 612.3 35.0 L 620.3 35.0 L 616.3 28.0 Z" fill="none" stroke="#3D5266" stroke-width="1.1"/><circle cx="578.8" cy="309.1" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="428.1" cy="242.0" r="2.8" fill="#3D5266" fill-opacity="0.5"/><path d="M 401.3 35.0 L 409.3 35.0 L 405.3 28.0 Z" fill="none" stroke="#3D5266" stroke-width="1.1"/><path d="M 656.0 35.0 L 664.0 35.0 L 660.0 28.0 Z" fill="none" stroke="#3D5266" stroke-width="1.1"/><circle cx="500.9" cy="161.0" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="580.5" cy="299.8" r="3.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="313.5" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="385.1" cy="274.5" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="452.2" cy="300.4" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="420.7" cy="295.6" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="509.2" cy="256.2" r="4.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="345.2" cy="227.1" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="415.8" cy="259.2" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="433.0" cy="308.7" r="3.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="712.9" cy="169.8" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="481.9" cy="255.6" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="428.1" cy="255.6" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="426.6" cy="227.9" r="4.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="294.8" cy="297.4" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="695.0" cy="263.6" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="610.9" cy="237.8" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="538.5" cy="291.0" r="3.0" fill="#3D5266" fill-opacity="0.5"/><path d="M 539.0 35.0 L 547.0 35.0 L 543.0 28.0 Z" fill="none" stroke="#3D5266" stroke-width="1.1"/><circle cx="378.1" cy="309.5" r="4.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="595.1" cy="291.9" r="4.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="510.8" cy="248.3" r="3.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="497.6" cy="280.7" r="3.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="472.3" cy="304.5" r="3.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="476.9" cy="246.5" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="449.6" cy="295.6" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="248.3" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="454.4" cy="298.3" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="508.0" cy="288.9" r="3.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="503.2" cy="299.5" r="4.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="399.7" cy="268.2" r="4.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="549.9" cy="311.1" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="541.2" cy="313.9" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="593.8" cy="313.8" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="434.4" cy="310.9" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="564.0" cy="309.8" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="629.6" cy="308.6" r="3.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="395.1" cy="311.0" r="3.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="418.1" cy="312.9" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="410.5" cy="288.1" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="286.5" cy="308.4" r="4.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="432.2" cy="304.0" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="621.4" cy="312.2" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="457.2" cy="311.7" r="4.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="542.9" cy="312.0" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="400.6" cy="314.7" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="453.5" cy="315.3" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="475.9" cy="315.4" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="4.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="4.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="4.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="4.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="4.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="4.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="4.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="4.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="4.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="3.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="315.4" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="386.1" cy="316.2" r="3.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="388.9" cy="316.4" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="433.3" cy="316.4" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="543.0" cy="316.7" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="413.0" cy="318.1" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="432.2" cy="316.1" r="4.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="513.1" cy="317.1" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="427.5" cy="317.3" r="4.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="473.7" cy="320.3" r="4.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="524.2" cy="321.1" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="557.8" cy="318.7" r="4.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="669.9" cy="326.2" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="516.1" cy="316.3" r="3.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="466.3" cy="321.3" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="542.7" cy="328.0" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="410.1" cy="325.7" r="4.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="432.2" cy="317.1" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="473.4" cy="327.9" r="3.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="568.4" cy="318.5" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="399.3" cy="316.3" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="441.6" cy="326.6" r="4.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="474.1" cy="320.2" r="4.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="448.2" cy="331.1" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="388.9" cy="316.3" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="380.7" cy="327.0" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="436.3" cy="322.2" r="4.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="378.7" cy="319.0" r="3.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="422.6" cy="349.2" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="433.9" cy="321.8" r="3.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="405.3" cy="337.5" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="455.5" cy="334.5" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="445.1" cy="321.0" r="4.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="536.9" cy="319.3" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="591.0" cy="343.2" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="428.7" cy="340.8" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="571.3" cy="323.8" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="443.4" cy="349.4" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="495.7" cy="327.5" r="4.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="648.2" cy="358.0" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="404.9" cy="350.5" r="3.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="591.8" cy="343.6" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="449.9" cy="331.6" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="465.0" cy="345.7" r="3.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="559.1" cy="361.8" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="572.1" cy="354.6" r="4.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="431.1" cy="325.2" r="4.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="413.3" cy="344.0" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="416.8" cy="326.7" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="530.7" cy="347.1" r="4.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="423.6" cy="346.7" r="3.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="487.1" cy="351.0" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="486.9" cy="362.5" r="3.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="456.6" cy="373.3" r="4.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="453.1" cy="348.2" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="439.0" cy="323.2" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="419.8" cy="359.5" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="447.3" cy="350.6" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="442.4" cy="371.7" r="5.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="580.2" cy="336.5" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="536.0" cy="327.5" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="345.9" cy="352.7" r="3.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="367.1" cy="320.7" r="4.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="400.6" cy="322.0" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="436.3" cy="344.6" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="410.8" cy="366.5" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="455.9" cy="325.2" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="590.7" cy="328.5" r="4.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="413.3" cy="362.0" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="393.0" cy="360.9" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="338.9" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="504.3" cy="349.5" r="4.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="539.6" cy="367.7" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="388.0" cy="341.4" r="4.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="665.1" cy="349.5" r="4.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="513.9" cy="325.6" r="2.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="571.4" cy="349.8" r="4.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="708.4" cy="355.6" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="423.6" cy="344.1" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="398.9" cy="321.1" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="537.8" cy="334.5" r="4.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="660.8" cy="333.0" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="715.5" cy="351.1" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="646.5" cy="368.6" r="4.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="441.6" cy="361.3" r="4.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="478.1" cy="358.1" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="549.0" cy="363.7" r="2.9" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="385.0" r="3.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="517.6" cy="331.6" r="4.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="397.7" cy="344.7" r="3.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="323.9" r="3.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="371.1" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="464.0" cy="317.5" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="438.7" cy="342.1" r="3.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="285.0" cy="385.0" r="4.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="578.4" cy="383.2" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="448.0" cy="362.6" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="610.5" cy="369.5" r="4.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="430.2" cy="379.6" r="3.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="478.6" cy="385.0" r="4.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="600.6" cy="342.8" r="3.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="530.4" cy="321.5" r="3.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="399.7" cy="385.0" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="410.8" cy="385.0" r="4.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="399.3" cy="333.4" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="496.8" cy="364.3" r="4.2" fill="#3D5266" fill-opacity="0.5"/><circle cx="588.7" cy="341.9" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="398.1" cy="333.9" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="415.4" cy="355.5" r="4.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="465.6" cy="367.5" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="544.3" cy="385.0" r="3.6" fill="#3D5266" fill-opacity="0.5"/><circle cx="387.0" cy="385.0" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="492.4" cy="366.2" r="5.1" fill="#3D5266" fill-opacity="0.5"/><circle cx="474.6" cy="359.7" r="4.3" fill="#3D5266" fill-opacity="0.5"/><circle cx="591.6" cy="385.0" r="4.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="389.4" cy="341.6" r="4.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="425.7" cy="385.0" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="355.8" r="2.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="435.5" cy="385.0" r="3.7" fill="#3D5266" fill-opacity="0.5"/><circle cx="316.0" cy="339.2" r="4.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="326.4" r="3.4" fill="#3D5266" fill-opacity="0.5"/><circle cx="376.6" cy="385.0" r="2.5" fill="#3D5266" fill-opacity="0.5"/><circle cx="64.0" cy="328.5" r="4.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="304.8" cy="343.7" r="2.8" fill="#3D5266" fill-opacity="0.5"/><circle cx="523.9" cy="346.9" r="3.0" fill="#3D5266" fill-opacity="0.5"/><circle cx="406.4" cy="345.4" r="5.1" fill="#3D5266" fill-opacity="0.5"/><text x="141.9" y="75.2" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="13" fill="#12263A" text-anchor="start" font-weight="600">rank correlation, lag vs return: -0.20</text><text x="141.9" y="92.2" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="13" fill="#12263A" text-anchor="start">if anything, the late filers do slightly worse.</text><text x="141.9" y="109.2" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="13" fill="#12263A" text-anchor="start">the folk theory isn't here.</text><text x="141.9" y="129.2" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="start">median excess — on time: +0.0% · late: -14.7%</text><text x="702.9" y="159.8" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#12263A" text-anchor="end" font-weight="600">Suozzi — two years late, on average</text><text x="360.0" y="181.1" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#12263A" text-anchor="start" font-weight="600">Comstock — on time, best returns anyway</text><text x="740.0" y="458.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="end">leaderboard.csv · filers with ≥10 scored trades · 4 above +400% pinned · negative lags (amended filings) shown at ≤1d · regenerated 2026-07-17</text></svg>
+      <figcaption>Average disclosure lag vs. average excess return per trade
+        for the 285 filers with ≥10 scored trades. Four filers above +400%
+        are pinned at the top edge; negative average lags (amended or
+        pre-dated filings) are shown at ≤1d. The red line is the STOCK Act's
+        45-day outer deadline.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="audit">
+  <div class="wrap">
+    <div class="audit-grid">
+      <div>
+        <span class="eyebrow">Case study · July 2026</span>
+        <h2>The night I caught my own backtest cheating</h2>
+        <div class="prose">
+          <p>Ahab's nightly run makes a call after the market closes, then grades
+            it later. The subtle bug: grading measured each move from
+            <strong>that same day's close</strong> — a price the system could see
+            but could never have traded. Any overnight gap got silently counted
+            as skill.</p>
+          <p>The fix was an honest anchor — grade from the <strong>next day's
+            open</strong>, the first price actually available. Then the hard
+            part: regrade all 4,067 settled predictions and publish whatever
+            fell out.</p>
+          <p>The experimental momentum lens lost 2.5 points of hit rate — a real
+            chunk of its "edge" was an untradeable gap. But the combined
+            ensemble <strong>gained</strong> 5.5 points: the old anchor had been
+            unfairly penalizing it. One in six verdicts flipped.</p>
+        </div>
+        <p class="pull">A backtest that flatters you is worse than no backtest
+          at all.</p>
+      </div>
+      <div>
+        <div class="verdicts">
+          <div class="verdict">
+            <div class="lens">EXPERIMENTAL<small>momentum lens</small></div>
+            <div class="delta down num">−2.5pp</div>
+          </div>
+          <div class="verdict">
+            <div class="lens">COMBINED<small>ensemble</small></div>
+            <div class="delta up num">+5.5pp</div>
+          </div>
+          <div class="verdict">
+            <div class="lens">BASELINE<small>pure flow</small></div>
+            <div class="delta up num">+1.9pp</div>
+          </div>
+          <div class="verdict">
+            <div class="lens">VERDICTS FLIPPED<small>of 4,067 regraded</small></div>
+            <div class="delta num" style="color:#EDF3EF">16.4%</div>
+          </div>
+        </div>
+        <p class="audit-note">Hit-rate change per lens after switching from
+          same-close to next-open grading anchors. Honest measurement cut the
+          flattering lens and rescued the good one.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Grading the grader</span>
+    <h2>Does a 70% mean 70%?</h2>
+    <div class="prose">
+      <p>Every call Ahab makes carries a confidence score, and every scored call
+        eventually matures into a win or a loss. Plot one against the other and
+        you get the system's honesty curve. Two things are true at once: the
+        ordering is right — higher confidence really does win more often — and
+        the slope is too shallow, so a stated 68% only cashes in at 55%. That
+        gap is measured every night and feeds the recalibration step. I'd
+        rather publish this curve than flatter it.</p>
+    </div>
+    <figure class="chart">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 486"><title>Reliability curve: predicted confidence vs realised win-rate</title><line x1="62.0" y1="412.0" x2="62.0" y2="26.0" stroke="#C9CFC4" stroke-width="1"/><line x1="62.0" y1="412.0" x2="694.0" y2="412.0" stroke="#C9CFC4" stroke-width="1"/><text x="62.0" y="432.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">0%</text><text x="52.0" y="416.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">0%</text><line x1="220.0" y1="412.0" x2="220.0" y2="26.0" stroke="#C9CFC4" stroke-width="1"/><line x1="62.0" y1="315.5" x2="694.0" y2="315.5" stroke="#C9CFC4" stroke-width="1"/><text x="220.0" y="432.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">25%</text><text x="52.0" y="319.5" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">25%</text><line x1="378.0" y1="412.0" x2="378.0" y2="26.0" stroke="#C9CFC4" stroke-width="1"/><line x1="62.0" y1="219.0" x2="694.0" y2="219.0" stroke="#C9CFC4" stroke-width="1"/><text x="378.0" y="432.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">50%</text><text x="52.0" y="223.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">50%</text><line x1="536.0" y1="412.0" x2="536.0" y2="26.0" stroke="#C9CFC4" stroke-width="1"/><line x1="62.0" y1="122.5" x2="694.0" y2="122.5" stroke="#C9CFC4" stroke-width="1"/><text x="536.0" y="432.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">75%</text><text x="52.0" y="126.5" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">75%</text><line x1="694.0" y1="412.0" x2="694.0" y2="26.0" stroke="#C9CFC4" stroke-width="1"/><line x1="62.0" y1="26.0" x2="694.0" y2="26.0" stroke="#C9CFC4" stroke-width="1"/><text x="694.0" y="432.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">100%</text><text x="52.0" y="30.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">100%</text><text x="378.0" y="452.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#3D5266" text-anchor="middle" letter-spacing="0.06em">confidence the system stated</text><text x="0.0" y="0.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#3D5266" text-anchor="middle" letter-spacing="0.06em" transform="translate(16 219.0) rotate(-90)">share of calls that won</text><line x1="62.0" y1="412.0" x2="694.0" y2="26.0" stroke="#3D5266" stroke-width="1.3" stroke-dasharray="7 5" opacity="0.75"/><text x="0.0" y="0.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="start" transform="translate(163.1 329.0) rotate(-31.3)">perfectly calibrated</text><line x1="62.0" y1="219.0" x2="694.0" y2="219.0" stroke="#3D5266" stroke-width="1" stroke-dasharray="2 4" opacity="0.6"/><text x="690.8" y="212.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="end">coin flip</text><polyline points="133.1,225.8 258.4,222.2 379.2,213.5 492.1,199.4 608.7,184.9" fill="none" stroke="#B02A63" stroke-width="1.6"/><circle cx="133.1" cy="225.8" r="10.9" fill="#B02A63" stroke="#F6F4ED" stroke-width="2"/><text x="133.1" y="207.9" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#12263A" text-anchor="middle" font-weight="600">48.2%</text><text x="133.1" y="251.7" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="middle">n=684</text><circle cx="258.4" cy="222.2" r="13.3" fill="#B02A63" stroke="#F6F4ED" stroke-width="2"/><text x="258.4" y="201.9" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#12263A" text-anchor="middle" font-weight="600">49.2%</text><text x="258.4" y="250.6" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="middle">n=1255</text><circle cx="379.2" cy="213.5" r="14.0" fill="#B02A63" stroke="#F6F4ED" stroke-width="2"/><text x="379.2" y="192.5" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#12263A" text-anchor="middle" font-weight="600">51.4%</text><text x="379.2" y="242.5" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="middle">n=1439</text><circle cx="492.1" cy="199.4" r="10.4" fill="#B02A63" stroke="#F6F4ED" stroke-width="2"/><text x="492.1" y="182.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#12263A" text-anchor="middle" font-weight="600">55.1%</text><text x="492.1" y="224.8" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="middle">n=581</text><circle cx="608.7" cy="184.9" r="5.5" fill="#B02A63" stroke="#F6F4ED" stroke-width="2"/><text x="608.7" y="172.4" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#12263A" text-anchor="middle" font-weight="600">58.8%</text><text x="608.7" y="205.5" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="middle">n=34</text><path d="M 538.6 86.6 Q 548.7 78.6 602.7 162.9" fill="none" stroke="#3D5266" stroke-width="1"/><text x="390.6" y="64.6" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start">only 34 calls were ever this confident —</text><text x="390.6" y="80.6" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start">thin sample, read with care</text><line x1="491.8" y1="149.5" x2="491.8" y2="199.4" stroke="#B3402E" stroke-width="1.2"/><text x="482.8" y="163.2" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#B3402E" text-anchor="end">the gap = overconfidence</text><text x="694.0" y="474.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="end">signal_outcomes · clean 1d set, n=3993 · hit 50.8% · Brier 0.288 · regenerated 2026-07-17</text></svg>
+      <figcaption>Predicted confidence vs. realised win-rate over 3,993 matured
+        1-day predictions, with windows disturbed by unforecastable shocks
+        (earnings surprises, volume curveballs) excluded. Dot area is sample
+        size. The bins are the same ones the nightly calibration report uses —
+        this chart is regenerated from <code>signal_outcomes</code> by a script
+        in the repo, not drawn by hand.</figcaption>
+    </figure>
+
+    <div class="prose" style="margin-top:64px">
+      <h3>Where the edge actually lives</h3>
+      <p style="margin-top:10px">The curve above says the ordering is right;
+        this chart says how right, one call at a time. Walk through every
+        matured call in scoring order, counting wins above a coin flip.
+        Pooled, all 3,993 calls end at +30 — a 1.0σ drift that a lucky coin
+        produces routinely. Split the same calls by the system's own stated
+        confidence and the story sharpens: the top quartile climbs out of the
+        luck envelope at 2.9σ while the bottom quartile sinks. The honest
+        claim was never "the system beats the market." It's narrower and more
+        useful: <strong>the system knows which of its own calls to
+        trust.</strong></p>
+    </div>
+    <figure class="chart">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 470"><title>Cumulative wins above coin-flip by confidence quartile, vs the ±2σ luck envelope</title><line x1="60.0" y1="28" x2="60.0" y2="406" stroke="#C9CFC4" stroke-width="1"/><text x="60.0" y="426.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">0</text><line x1="229.3" y1="28" x2="229.3" y2="406" stroke="#C9CFC4" stroke-width="1"/><text x="229.3" y="426.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">1,000</text><line x1="398.6" y1="28" x2="398.6" y2="406" stroke="#C9CFC4" stroke-width="1"/><text x="398.6" y="426.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">2,000</text><line x1="567.9" y1="28" x2="567.9" y2="406" stroke="#C9CFC4" stroke-width="1"/><text x="567.9" y="426.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="middle">3,000</text><line x1="60" y1="353.9" x2="736" y2="353.9" stroke="#C9CFC4" stroke-width="1"/><text x="52.0" y="357.9" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">-50</text><line x1="60" y1="288.7" x2="736" y2="288.7" stroke="#C9CFC4" stroke-width="1"/><text x="52.0" y="292.7" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">-25</text><line x1="60" y1="223.5" x2="736" y2="223.5" stroke="#C9CFC4" stroke-width="1"/><text x="52.0" y="227.5" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">0</text><line x1="60" y1="158.3" x2="736" y2="158.3" stroke="#C9CFC4" stroke-width="1"/><text x="52.0" y="162.3" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">+25</text><line x1="60" y1="93.2" x2="736" y2="93.2" stroke="#C9CFC4" stroke-width="1"/><text x="52.0" y="97.2" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">+50</text><text x="398.0" y="446.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#3D5266" text-anchor="middle" letter-spacing="0.06em">matured 1-day calls, in scoring order (May 26 → Jun 24)</text><text x="0.0" y="0.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#3D5266" text-anchor="middle" letter-spacing="0.06em" transform="translate(16 217.0) rotate(-90)">wins above coin-flip, running total</text><polygon points="60.0,223.5 68.5,205.1 76.9,197.4 85.4,191.6 93.9,186.7 102.3,182.3 110.8,178.4 119.3,174.7 127.7,171.4 136.2,168.2 144.6,165.2 153.1,162.4 161.6,159.7 170.0,157.1 178.5,154.5 187.0,152.1 195.4,149.8 203.9,147.5 212.4,145.3 220.8,143.2 229.3,141.1 237.8,139.0 246.2,137.1 254.7,135.1 263.2,133.2 271.6,131.3 280.1,129.5 288.5,127.7 297.0,126.0 305.5,124.2 313.9,122.6 322.4,120.9 330.9,119.2 339.3,117.6 347.8,116.0 356.3,114.5 364.7,112.9 373.2,111.4 381.7,109.9 390.1,108.4 398.6,106.9 407.1,105.5 415.5,104.1 424.0,102.6 432.5,101.2 440.9,99.9 449.4,98.5 457.8,97.1 466.3,95.8 474.8,94.5 483.2,93.2 491.7,91.9 500.2,90.6 508.6,89.3 517.1,88.1 525.6,86.8 534.0,85.6 542.5,84.3 551.0,83.1 559.4,81.9 567.9,80.7 576.4,79.5 584.8,78.4 593.3,77.2 601.7,76.0 610.2,74.9 618.7,73.8 627.1,72.6 635.6,71.5 644.1,70.4 652.5,69.3 661.0,68.2 669.5,67.1 677.9,66.0 686.4,64.9 694.9,63.9 703.3,62.8 711.8,61.8 720.3,60.7 728.7,59.7 728.7,387.4 720.3,386.3 711.8,385.3 703.3,384.2 694.9,383.2 686.4,382.1 677.9,381.0 669.5,379.9 661.0,378.8 652.5,377.7 644.1,376.6 635.6,375.5 627.1,374.4 618.7,373.3 610.2,372.1 601.7,371.0 593.3,369.8 584.8,368.7 576.4,367.5 567.9,366.3 559.4,365.1 551.0,363.9 542.5,362.7 534.0,361.5 525.6,360.2 517.1,359.0 508.6,357.7 500.2,356.4 491.7,355.2 483.2,353.9 474.8,352.6 466.3,351.2 457.8,349.9 449.4,348.5 440.9,347.2 432.5,345.8 424.0,344.4 415.5,343.0 407.1,341.5 398.6,340.1 390.1,338.6 381.7,337.1 373.2,335.6 364.7,334.1 356.3,332.6 347.8,331.0 339.3,329.4 330.9,327.8 322.4,326.2 313.9,324.5 305.5,322.8 297.0,321.1 288.5,319.3 280.1,317.5 271.6,315.7 263.2,313.8 254.7,311.9 246.2,310.0 237.8,308.0 229.3,306.0 220.8,303.9 212.4,301.7 203.9,299.5 195.4,297.3 187.0,294.9 178.5,292.5 170.0,290.0 161.6,287.4 153.1,284.7 144.6,281.8 136.2,278.8 127.7,275.7 119.3,272.3 110.8,268.7 102.3,264.7 93.9,260.4 85.4,255.4 76.9,249.6 68.5,242.0 60.0,223.5" fill="#C9CFC4" fill-opacity="0.32"/><polyline points="60.0,223.5 68.5,205.1 76.9,197.4 85.4,191.6 93.9,186.7 102.3,182.3 110.8,178.4 119.3,174.7 127.7,171.4 136.2,168.2 144.6,165.2 153.1,162.4 161.6,159.7 170.0,157.1 178.5,154.5 187.0,152.1 195.4,149.8 203.9,147.5 212.4,145.3 220.8,143.2 229.3,141.1 237.8,139.0 246.2,137.1 254.7,135.1 263.2,133.2 271.6,131.3 280.1,129.5 288.5,127.7 297.0,126.0 305.5,124.2 313.9,122.6 322.4,120.9 330.9,119.2 339.3,117.6 347.8,116.0 356.3,114.5 364.7,112.9 373.2,111.4 381.7,109.9 390.1,108.4 398.6,106.9 407.1,105.5 415.5,104.1 424.0,102.6 432.5,101.2 440.9,99.9 449.4,98.5 457.8,97.1 466.3,95.8 474.8,94.5 483.2,93.2 491.7,91.9 500.2,90.6 508.6,89.3 517.1,88.1 525.6,86.8 534.0,85.6 542.5,84.3 551.0,83.1 559.4,81.9 567.9,80.7 576.4,79.5 584.8,78.4 593.3,77.2 601.7,76.0 610.2,74.9 618.7,73.8 627.1,72.6 635.6,71.5 644.1,70.4 652.5,69.3 661.0,68.2 669.5,67.1 677.9,66.0 686.4,64.9 694.9,63.9 703.3,62.8 711.8,61.8 720.3,60.7 728.7,59.7" fill="none" stroke="#3D5266" stroke-width="1" stroke-dasharray="5 4" opacity="0.7"/><polyline points="60.0,223.5 68.5,242.0 76.9,249.6 85.4,255.4 93.9,260.4 102.3,264.7 110.8,268.7 119.3,272.3 127.7,275.7 136.2,278.8 144.6,281.8 153.1,284.7 161.6,287.4 170.0,290.0 178.5,292.5 187.0,294.9 195.4,297.3 203.9,299.5 212.4,301.7 220.8,303.9 229.3,306.0 237.8,308.0 246.2,310.0 254.7,311.9 263.2,313.8 271.6,315.7 280.1,317.5 288.5,319.3 297.0,321.1 305.5,322.8 313.9,324.5 322.4,326.2 330.9,327.8 339.3,329.4 347.8,331.0 356.3,332.6 364.7,334.1 373.2,335.6 381.7,337.1 390.1,338.6 398.6,340.1 407.1,341.5 415.5,343.0 424.0,344.4 432.5,345.8 440.9,347.2 449.4,348.5 457.8,349.9 466.3,351.2 474.8,352.6 483.2,353.9 491.7,355.2 500.2,356.4 508.6,357.7 517.1,359.0 525.6,360.2 534.0,361.5 542.5,362.7 551.0,363.9 559.4,365.1 567.9,366.3 576.4,367.5 584.8,368.7 593.3,369.8 601.7,371.0 610.2,372.1 618.7,373.3 627.1,374.4 635.6,375.5 644.1,376.6 652.5,377.7 661.0,378.8 669.5,379.9 677.9,381.0 686.4,382.1 694.9,383.2 703.3,384.2 711.8,385.3 720.3,386.3 728.7,387.4" fill="none" stroke="#3D5266" stroke-width="1" stroke-dasharray="5 4" opacity="0.7"/><line x1="60" y1="223.5" x2="736" y2="223.5" stroke="#12263A" stroke-width="1"/><text x="720.3" y="52.7" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">±2σ luck envelope</text><text x="720.3" y="402.3" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">a zero-edge system stays inside</text><polyline points="60.0,223.5 60.2,224.8 60.7,228.7 61.2,224.8 61.7,226.1 62.2,224.8 62.7,226.1 63.2,227.4 63.7,228.7 64.2,230.0 64.7,231.3 65.2,232.6 65.8,233.9 66.3,235.2 66.8,233.9 67.3,235.2 67.8,236.6 68.3,237.9 68.8,241.8 69.3,240.5 69.8,239.2 70.3,235.2 70.8,236.6 71.3,235.2 71.9,236.6 72.4,232.6 72.9,231.3 73.4,235.2 73.9,233.9 74.4,235.2 74.9,233.9 75.4,235.2 75.9,233.9 76.4,230.0 76.9,231.3 77.4,232.6 77.9,231.3 78.5,232.6 79.0,231.3 79.5,232.6 80.0,233.9 80.5,232.6 81.0,233.9 81.5,232.6 82.0,228.7 82.5,232.6 83.0,228.7 83.5,227.4 84.0,226.1 84.5,227.4 85.1,226.1 85.6,224.8 86.1,220.9 86.6,222.2 87.1,226.1 87.6,227.4 88.1,228.7 88.6,230.0 89.1,228.7 89.6,230.0 90.1,228.7 90.6,230.0 91.2,231.3 91.7,232.6 92.2,233.9 92.7,235.2 93.2,236.6 93.7,232.6 94.2,233.9 94.7,230.0 95.2,228.7 95.7,227.4 96.2,228.7 96.7,230.0 97.2,233.9 97.8,232.6 98.3,233.9 98.8,235.2 99.3,236.6 99.8,237.9 100.3,236.6 100.8,235.2 101.3,236.6 101.8,235.2 102.3,231.3 102.8,232.6 103.3,233.9 103.8,235.2 104.4,236.6 104.9,235.2 105.4,233.9 105.9,230.0 106.4,226.1 106.9,222.2 107.4,220.9 107.9,222.2 108.4,226.1 108.9,224.8 109.4,226.1 109.9,222.2 110.5,223.5 111.0,219.6 111.5,220.9 112.0,222.2 112.5,220.9 113.0,224.8 113.5,228.7 114.0,227.4 114.5,228.7 115.0,230.0 115.5,231.3 116.0,227.4 116.5,228.7 117.1,230.0 117.6,228.7 118.1,227.4 118.6,223.5 119.1,222.2 119.6,223.5 120.1,222.2 120.6,226.1 121.1,227.4 121.6,226.1 122.1,227.4 122.6,223.5 123.1,222.2 123.7,220.9 124.2,219.6 124.7,223.5 125.2,224.8 125.7,223.5 126.2,222.2 126.7,220.9 127.2,222.2 127.7,220.9 128.2,222.2 128.7,223.5 129.2,222.2 129.8,223.5 130.3,222.2 130.8,223.5 131.3,219.6 131.8,220.9 132.3,224.8 132.8,223.5 133.3,224.8 133.8,226.1 134.3,227.4 134.8,228.7 135.3,224.8 135.8,226.1 136.4,224.8 136.9,220.9 137.4,224.8 137.9,223.5 138.4,219.6 138.9,218.3 139.4,219.6 139.9,220.9 140.4,224.8 140.9,226.1 141.4,222.2 141.9,220.9 142.4,222.2 143.0,223.5 143.5,219.6 144.0,215.7 144.5,214.4 145.0,213.1 145.5,214.4 146.0,218.3 146.5,222.2 147.0,218.3 147.5,219.6 148.0,218.3 148.5,219.6 149.0,218.3 149.6,214.4 150.1,215.7 150.6,211.8 151.1,213.1 151.6,209.2 152.1,207.9 152.6,209.2 153.1,205.3 153.6,204.0 154.1,207.9 154.6,209.2 155.1,210.5 155.7,211.8 156.2,210.5 156.7,209.2 157.2,205.3 157.7,201.4 158.2,200.1 158.7,196.1 159.2,200.1 159.7,201.4 160.2,200.1 160.7,198.8 161.2,197.4 161.7,201.4 162.3,202.7 162.8,201.4 163.3,202.7 163.8,204.0 164.3,205.3 164.8,204.0 165.3,207.9 165.8,209.2 166.3,207.9 166.8,209.2 167.3,210.5 167.8,211.8 168.3,213.1 168.9,214.4 169.4,218.3 169.9,219.6 170.4,220.9 170.9,222.2 171.4,223.5 171.9,219.6 172.4,220.9 172.9,222.2 173.4,226.1 173.9,230.0 174.4,231.3 175.0,232.6 175.5,233.9 176.0,235.2 176.5,239.2 177.0,240.5 177.5,239.2 178.0,243.1 178.5,241.8 179.0,243.1 179.5,247.0 180.0,250.9 180.5,249.6 181.0,250.9 181.6,252.2 182.1,253.5 182.6,249.6 183.1,253.5 183.6,252.2 184.1,253.5 184.6,254.8 185.1,253.5 185.6,254.8 186.1,253.5 186.6,257.4 187.1,258.7 187.6,257.4 188.2,256.1 188.7,257.4 189.2,256.1 189.7,254.8 190.2,258.7 190.7,257.4 191.2,256.1 191.7,260.0 192.2,261.3 192.7,262.6 193.2,261.3 193.7,262.6 194.3,261.3 194.8,262.6 195.3,261.3 195.8,257.4 196.3,258.7 196.8,257.4 197.3,256.1 197.8,260.0 198.3,258.7 198.8,260.0 199.3,256.1 199.8,254.8 200.3,256.1 200.9,257.4 201.4,256.1 201.9,257.4 202.4,256.1 202.9,260.0 203.4,256.1 203.9,257.4 204.4,256.1 204.9,252.2 205.4,256.1 205.9,254.8 206.4,258.7 206.9,257.4 207.5,258.7 208.0,257.4 208.5,258.7 209.0,260.0 209.5,261.3 210.0,262.6 210.5,263.9 211.0,267.8 211.5,271.7 212.0,273.0 212.5,274.4 213.0,275.7 213.6,274.4 214.1,275.7 214.6,277.0 215.1,275.7 215.6,277.0 216.1,273.0 216.6,274.4 217.1,275.7 217.6,277.0 218.1,278.3 218.6,277.0 219.1,273.0 219.6,277.0 220.2,275.7 220.7,274.4 221.2,275.7 221.7,277.0 222.2,275.7 222.7,277.0 223.2,275.7 223.7,279.6 224.2,280.9 224.7,277.0 225.2,280.9 225.7,282.2 226.2,280.9 226.8,279.6 227.3,280.9 227.8,282.2 228.3,278.3 228.8,274.4 229.1,277.0" fill="none" stroke="#8A9890" stroke-width="1.4"/><polyline points="60.0,223.5 60.2,224.8 62.4,228.7 64.6,219.6 66.8,220.9 69.0,227.4 71.2,226.1 73.4,227.4 75.6,226.1 77.8,219.6 80.0,220.9 82.2,214.4 84.4,220.9 86.6,227.4 88.8,236.6 91.0,232.6 93.2,231.3 95.4,230.0 97.6,226.1 99.8,232.6 102.0,228.7 104.2,227.4 106.4,226.1 108.6,232.6 110.8,233.9 113.0,240.5 115.2,226.1 117.4,224.8 119.6,231.3 121.8,230.0 124.0,233.9 126.2,224.8 128.4,226.1 130.6,222.2 132.8,218.3 135.0,219.6 137.2,220.9 139.4,222.2 141.6,220.9 143.8,222.2 146.0,215.7 148.2,214.4 150.4,215.7 152.6,219.6 154.8,223.5 157.0,214.4 159.2,210.5 161.4,209.2 163.6,202.7 165.8,201.4 168.0,194.8 170.2,188.3 172.4,181.8 174.6,185.7 176.8,184.4 179.0,183.1 181.2,179.2 183.4,172.7 185.6,176.6 187.8,183.1 190.0,184.4 192.2,185.7 194.4,184.4 196.6,180.5 198.8,168.8 201.0,167.5 203.2,166.2 205.4,167.5 207.6,174.0 209.8,170.1 212.0,174.0 214.2,175.3 216.4,174.0 218.6,172.7 220.8,176.6 223.0,175.3 225.2,174.0 227.4,175.3 229.6,168.8 231.8,162.3 234.0,168.8 236.2,175.3 238.4,166.2 240.6,170.1 242.8,166.2 245.0,172.7 247.2,179.2 249.4,177.9 251.6,166.2 253.8,167.5 256.0,168.8 258.2,172.7 260.4,168.8 262.6,170.1 264.8,176.6 267.0,175.3 269.3,168.8 271.5,175.3 273.7,171.4 275.9,177.9 278.1,174.0 280.3,180.5 282.5,181.8 284.7,183.1 286.9,179.2 289.1,172.7 291.3,166.2 293.5,167.5 295.7,168.8 297.9,170.1 300.1,166.2 302.3,157.0 304.5,161.0 306.7,159.6 308.9,158.3 311.1,159.6 313.3,158.3 315.5,162.3 317.7,150.5 319.9,154.4 322.1,150.5 324.3,157.0 326.5,161.0 328.7,157.0 330.9,161.0 333.1,154.4 335.3,150.5 337.5,149.2 339.7,145.3 341.9,154.4 344.1,163.6 346.3,162.3 348.5,155.7 350.7,151.8 352.9,145.3 355.1,138.8 357.3,127.1 359.5,131.0 361.7,129.7 363.9,136.2 366.1,137.5 368.3,144.0 370.5,145.3 372.7,136.2 374.9,134.9 377.1,125.8 379.3,121.8 381.5,115.3 383.7,111.4 385.9,117.9 388.1,127.1 390.3,123.2 392.5,137.5 394.7,133.6 396.9,129.7 399.1,125.8 401.3,121.8 403.5,117.9 405.7,106.2 407.9,99.7 410.1,95.8 412.3,97.1 414.5,101.0 416.7,99.7 418.9,98.4 421.1,99.7 423.3,103.6 425.5,97.1 427.7,93.2 429.9,86.7 432.1,90.6 434.3,91.9 436.5,93.2 438.7,91.9 440.9,85.4 443.1,94.5 445.3,93.2 447.5,99.7 449.7,98.4 451.9,102.3 454.1,106.2 456.3,107.5 458.5,103.6 460.7,107.5 462.9,103.6 465.1,115.3 467.3,114.0 469.5,120.5 471.7,111.4 473.9,117.9 476.1,121.8 478.3,131.0 480.5,134.9 482.7,138.8 484.9,129.7 487.1,131.0 489.3,132.3 491.5,133.6 493.7,132.3 495.9,138.8 498.1,142.7 500.3,138.8 502.5,145.3 504.7,151.8 506.9,155.7 509.1,151.8 511.3,153.1 513.5,157.0 515.7,155.7 517.9,157.0 520.1,153.1 522.3,164.9 524.5,166.2 526.7,172.7 529.0,171.4 531.2,175.3 533.4,179.2 535.6,177.9 537.8,176.6 540.0,183.1 542.2,181.8 544.4,177.9 546.6,176.6 548.8,183.1 551.0,192.2 553.2,193.5 555.4,187.0 557.6,183.1 559.8,181.8 562.0,180.5 564.2,184.4 566.4,190.9 568.6,184.4 570.8,190.9 573.0,194.8 575.2,183.1 577.4,176.6 579.6,175.3 581.8,171.4 584.0,164.9 586.2,163.6 588.4,164.9 590.6,166.2 592.8,175.3 595.0,174.0 597.2,172.7 599.4,168.8 601.6,170.1 603.8,168.8 606.0,164.9 608.2,163.6 610.4,157.0 612.6,155.7 614.8,151.8 617.0,147.9 619.2,141.4 621.4,142.7 623.6,141.4 625.8,147.9 628.0,154.4 630.2,158.3 632.4,159.6 634.6,153.1 636.8,149.2 639.0,150.5 641.2,149.2 643.4,153.1 645.6,151.8 647.8,147.9 650.0,144.0 652.2,145.3 654.4,141.4 656.6,142.7 658.8,144.0 661.0,150.5 663.2,151.8 665.4,150.5 667.6,157.0 669.8,161.0 672.0,164.9 674.2,171.4 676.4,172.7 678.6,171.4 680.8,172.7 683.0,168.8 685.2,170.1 687.4,168.8 689.6,170.1 691.8,168.8 694.0,162.3 696.2,163.6 698.4,159.6 700.6,158.3 702.8,157.0 705.0,153.1 707.2,157.0 709.4,155.7 711.6,154.4 713.8,147.9 716.0,149.2 718.2,147.9 720.4,154.4 722.6,155.7 724.8,151.8 727.0,153.1 729.2,149.2 731.4,153.1 733.6,144.0 735.8,142.7 736.0,144.0" fill="none" stroke="#3D5266" stroke-width="1.3"/><polyline points="60.0,223.5 60.2,222.2 60.7,220.9 61.2,219.6 61.7,223.5 62.2,219.6 62.7,215.7 63.2,217.0 63.7,215.7 64.2,217.0 64.7,215.7 65.2,214.4 65.8,218.3 66.3,217.0 66.8,215.7 67.3,211.8 67.8,210.5 68.3,209.2 68.8,213.1 69.3,211.8 69.8,207.9 70.3,209.2 70.8,207.9 71.3,209.2 71.9,207.9 72.4,204.0 72.9,205.3 73.4,206.6 73.9,205.3 74.4,201.4 74.9,200.1 75.4,198.8 75.9,194.8 76.4,198.8 76.9,197.4 77.4,193.5 77.9,194.8 78.5,196.1 79.0,194.8 79.5,196.1 80.0,197.4 80.5,198.8 81.0,197.4 81.5,198.8 82.0,197.4 82.5,198.8 83.0,200.1 83.5,198.8 84.0,200.1 84.5,196.1 85.1,194.8 85.6,190.9 86.1,192.2 86.6,188.3 87.1,189.6 87.6,185.7 88.1,184.4 88.6,183.1 89.1,181.8 89.6,183.1 90.1,187.0 90.6,188.3 91.2,187.0 91.7,183.1 92.2,179.2 92.7,177.9 93.2,174.0 93.7,170.1 94.2,168.8 94.7,172.7 95.2,176.6 95.7,177.9 96.2,181.8 96.7,180.5 97.2,181.8 97.8,185.7 98.3,181.8 98.8,180.5 99.3,181.8 99.8,177.9 100.3,179.2 100.8,177.9 101.3,176.6 101.8,177.9 102.3,176.6 102.8,172.7 103.3,171.4 103.8,167.5 104.4,168.8 104.9,164.9 105.4,166.2 105.9,167.5 106.4,168.8 106.9,170.1 107.4,168.8 107.9,170.1 108.4,171.4 108.9,172.7 109.4,174.0 109.9,172.7 110.5,174.0 111.0,175.3 111.5,179.2 112.0,177.9 112.5,176.6 113.0,177.9 113.5,179.2 114.0,177.9 114.5,179.2 115.0,177.9 115.5,176.6 116.0,177.9 116.5,179.2 117.1,177.9 117.6,179.2 118.1,177.9 118.6,176.6 119.1,172.7 119.6,168.8 120.1,167.5 120.6,166.2 121.1,164.9 121.6,166.2 122.1,167.5 122.6,168.8 123.1,167.5 123.7,166.2 124.2,167.5 124.7,171.4 125.2,172.7 125.7,176.6 126.2,180.5 126.7,181.8 127.2,177.9 127.7,179.2 128.2,177.9 128.7,179.2 129.2,180.5 129.8,179.2 130.3,175.3 130.8,176.6 131.3,172.7 131.8,174.0 132.3,172.7 132.8,168.8 133.3,167.5 133.8,168.8 134.3,167.5 134.8,163.6 135.3,162.3 135.8,163.6 136.4,162.3 136.9,161.0 137.4,162.3 137.9,163.6 138.4,167.5 138.9,171.4 139.4,172.7 139.9,174.0 140.4,175.3 140.9,174.0 141.4,175.3 141.9,174.0 142.4,172.7 143.0,171.4 143.5,172.7 144.0,168.8 144.5,172.7 145.0,168.8 145.5,167.5 146.0,166.2 146.5,164.9 147.0,163.6 147.5,162.3 148.0,158.3 148.5,154.4 149.0,158.3 149.6,159.6 150.1,158.3 150.6,162.3 151.1,161.0 151.6,157.0 152.1,155.7 152.6,154.4 153.1,158.3 153.6,159.6 154.1,161.0 154.6,162.3 155.1,163.6 155.7,164.9 156.2,166.2 156.7,164.9 157.2,166.2 157.7,164.9 158.2,161.0 158.7,157.0 159.2,158.3 159.7,162.3 160.2,163.6 160.7,164.9 161.2,161.0 161.7,164.9 162.3,166.2 162.8,170.1 163.3,168.8 163.8,167.5 164.3,166.2 164.8,167.5 165.3,166.2 165.8,167.5 166.3,166.2 166.8,167.5 167.3,166.2 167.8,164.9 168.3,163.6 168.9,164.9 169.4,166.2 169.9,167.5 170.4,166.2 170.9,164.9 171.4,163.6 171.9,164.9 172.4,163.6 172.9,159.6 173.4,161.0 173.9,164.9 174.4,163.6 175.0,159.6 175.5,158.3 176.0,154.4 176.5,158.3 177.0,157.0 177.5,155.7 178.0,154.4 178.5,158.3 179.0,154.4 179.5,155.7 180.0,159.6 180.5,161.0 181.0,159.6 181.6,161.0 182.1,159.6 182.6,163.6 183.1,164.9 183.6,161.0 184.1,159.6 184.6,158.3 185.1,159.6 185.6,161.0 186.1,162.3 186.6,161.0 187.1,162.3 187.6,161.0 188.2,157.0 188.7,155.7 189.2,154.4 189.7,150.5 190.2,146.6 190.7,145.3 191.2,144.0 191.7,142.7 192.2,146.6 192.7,147.9 193.2,146.6 193.7,145.3 194.3,144.0 194.8,142.7 195.3,144.0 195.8,145.3 196.3,144.0 196.8,140.1 197.3,138.8 197.8,137.5 198.3,136.2 198.8,132.3 199.3,131.0 199.8,129.7 200.3,131.0 200.9,132.3 201.4,136.2 201.9,137.5 202.4,136.2 202.9,132.3 203.4,133.6 203.9,129.7 204.4,128.4 204.9,124.5 205.4,123.2 205.9,124.5 206.4,123.2 206.9,124.5 207.5,125.8 208.0,124.5 208.5,125.8 209.0,124.5 209.5,125.8 210.0,124.5 210.5,123.2 211.0,127.1 211.5,128.4 212.0,132.3 212.5,136.2 213.0,132.3 213.6,131.0 214.1,132.3 214.6,133.6 215.1,132.3 215.6,133.6 216.1,129.7 216.6,133.6 217.1,134.9 217.6,131.0 218.1,132.3 218.6,128.4 219.1,127.1 219.6,125.8 220.2,127.1 220.7,125.8 221.2,121.8 221.7,117.9 222.2,116.6 222.7,117.9 223.2,116.6 223.7,115.3 224.2,114.0 224.7,112.7 225.2,114.0 225.7,112.7 226.2,108.8 226.8,112.7 227.3,108.8 227.8,110.1 228.3,106.2 228.8,104.9 229.1,104.9" fill="none" stroke="#B02A63" stroke-width="1.9"/><path d="M 234.2 77.5 Q 244.4 88.0 233.1 100.9" fill="none" stroke="#B02A63" stroke-width="1" opacity="0.7"/><text x="239.3" y="67.1" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#B02A63" text-anchor="start" font-weight="600">top-quartile confidence · +46 (2.9σ)</text><text x="239.3" y="83.1" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#B02A63" text-anchor="start">the edge is real — and it lives here</text><text x="732.0" y="134.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#3D5266" text-anchor="end" font-weight="600">all 3,993 calls · +30 (1.0σ) — still inside</text><text x="237.1" y="291.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#8A9890" text-anchor="start" font-weight="600">bottom quartile · -20</text><text x="736.0" y="460.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="end">signal_outcomes · clean 1d set · quartile split at conf ≥ 0.54 / ≤ 0.26 · regenerated 2026-07-17</text></svg>
+      <figcaption>Cumulative wins above 50%, matured 1-day calls in scoring
+        order on the same clean set as the reliability curve. The envelope is
+        <code>±2·√(k/4)</code> after <code>k</code> calls — the same yardstick
+        for every line regardless of length. Equities drift upward, so the
+        coin isn't perfectly fair; the load-bearing comparison is between the
+        lines, not any one line against zero.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Under the hood</span>
+    <h2>Engineering it like it matters</h2>
+    <div class="hl-grid">
+      <div class="hl">
+        <span class="glyph">CONSTRAINT</span>
+        <h3>$0/month, by design</h3>
+        <p>No paid APIs, no cloud bill: free market-data feeds, SQLite as the
+          event store, launchd for scheduling, and a plan to move LLM inference
+          to a self-hosted open-weights model. Constraints forced better
+          engineering, not worse.</p>
+      </div>
+      <div class="hl">
+        <span class="glyph">VALIDATION</span>
+        <h3>Walk-forward, out-of-sample</h3>
+        <p>Signals are validated with walk-forward A/B comparisons and
+          out-of-sample blending diagnostics — never fit and scored on the same
+          window. Overlapping outcome windows and unlabeled tails are handled
+          explicitly, not ignored.</p>
+      </div>
+      <div class="hl">
+        <span class="glyph">CALIBRATION</span>
+        <h3>Confidence that means something</h3>
+        <p>Every prediction carries a probability, and the system tracks whether
+          its 70%s land 70% of the time. Signal snapshots are persisted so
+          calibration can be recomputed retroactively as grading rules improve.</p>
+      </div>
+      <div class="hl">
+        <span class="glyph">SAFETY</span>
+        <h3>Suggest mode, gated execution</h3>
+        <p>The bot writes reports; a human decides. Automated paper trading is
+          built but deliberately fenced behind a single explicit config gate,
+          with hard rules preventing any code path from loosening it.</p>
+      </div>
+      <div class="hl">
+        <span class="glyph">DUAL LENS</span>
+        <h3>Baseline vs. experimental</h3>
+        <p>Every symbol gets two independent reads — pure order flow and
+          momentum — reported side by side with the divergence named. When the
+          lenses disagree, that disagreement is the information.</p>
+      </div>
+      <div class="hl">
+        <span class="glyph">OBSERVABILITY</span>
+        <h3>Every run leaves a manifest</h3>
+        <p>Each nightly scan logs exactly which inputs it read and which reports
+          it wrote. Any number in any report can be traced back to the files
+          that produced it.</p>
+      </div>
+    </div>
+    <div class="prose" style="margin-top:64px">
+      <h3>Anatomy of one call</h3>
+      <p style="margin-top:10px">Here's what that calibration machinery does
+        to a single night's judgment. On July 14 the strongest raw signal in
+        the universe was AAPL: a 13-day institutional selling campaign walking
+        straight into an all-time-high price. The whale ledger alone scored it
+        0.763. Then each fragility gate asked its one question, and the
+        volatility gate found the weakness — the vol regime sat at its 97th
+        percentile, high enough that a "campaign" can be noise wearing a
+        trend. What reached the morning report was 0.421, and the report said
+        <em>trim and watch</em>, not <em>short with conviction</em>.</p>
+    </div>
+    <figure class="chart">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 430"><title>AAPL 2026-07-14: raw flow score cut to combined confidence by fragility gates</title><line x1="300.0" y1="58" x2="300.0" y2="352" stroke="#C9CFC4" stroke-width="1"/><text x="300.0" y="48.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="middle">0</text><line x1="406.0" y1="58" x2="406.0" y2="352" stroke="#C9CFC4" stroke-width="1"/><text x="406.0" y="48.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="middle">0.25</text><line x1="512.0" y1="58" x2="512.0" y2="352" stroke="#C9CFC4" stroke-width="1"/><text x="512.0" y="48.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="middle">0.5</text><line x1="618.0" y1="58" x2="618.0" y2="352" stroke="#C9CFC4" stroke-width="1"/><text x="618.0" y="48.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="middle">0.75</text><line x1="724.0" y1="58" x2="724.0" y2="352" stroke="#C9CFC4" stroke-width="1"/><text x="724.0" y="48.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="middle">1</text><text x="512.0" y="28.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#3D5266" text-anchor="middle" letter-spacing="0.06em">confidence, 0 → 1</text><text x="36.0" y="79.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#B02A63" text-anchor="start" font-weight="600" letter-spacing="0.08em">AAPL · RAW FLOW SCORE</text><text x="36.0" y="94.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="start">what the whale ledger alone says</text><rect x="300" y="70.0" width="323.5" height="22" fill="#B02A63"/><text x="631.5" y="85.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#B02A63" text-anchor="start" font-weight="600">0.763</text><text x="36.0" y="118.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="start">35 events / 13 days · net −3.8×ADV · consistency 0.86 · vol z 272σ · onset +18d lead</text><text x="36.0" y="148.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="start" letter-spacing="0.14em">FRAGILITY GATES</text><text x="36.0" y="163.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="start">each asks: would this signal survive if —</text><text x="36.0" y="182.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start" font-weight="600" letter-spacing="0.08em">VOL-SCALED</text><text x="36.0" y="197.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="start">is volatility doing the shouting?</text><rect x="300" y="178.0" width="323.5" height="12" fill="#C9CFC4" fill-opacity="0.5"/><rect x="300" y="178.0" width="178.4" height="12" fill="#3D5266"/><text x="472.4" y="188.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#F6F4ED" text-anchor="end" font-weight="600">0.421</text><text x="631.5" y="188.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#B3402E" text-anchor="start">-0.342</text><text x="36.0" y="228.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start" font-weight="600" letter-spacing="0.08em">PANIC GATE</text><text x="36.0" y="243.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="start">is the whole market flinching?</text><rect x="300" y="224.0" width="323.5" height="12" fill="#C9CFC4" fill-opacity="0.5"/><rect x="300" y="224.0" width="242.7" height="12" fill="#3D5266"/><text x="536.7" y="234.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#F6F4ED" text-anchor="end" font-weight="600">0.572</text><text x="631.5" y="234.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#B3402E" text-anchor="start">-0.191</text><text x="36.0" y="274.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start" font-weight="600" letter-spacing="0.08em">AMIHUD GATE</text><text x="36.0" y="289.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="start">is the tape thick enough to trust?</text><rect x="300" y="270.0" width="323.5" height="12" fill="#C9CFC4" fill-opacity="0.5"/><rect x="300" y="270.0" width="321.7" height="12" fill="#3D5266"/><text x="615.7" y="280.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#F6F4ED" text-anchor="end" font-weight="600">0.759</text><text x="631.5" y="280.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#B3402E" text-anchor="start">-0.004</text><text x="36.0" y="331.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start" font-weight="600" letter-spacing="0.08em">ALL GATES TOGETHER</text><text x="36.0" y="346.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11" fill="#3D5266" text-anchor="start">what the report may act on</text><rect x="300" y="322.0" width="178.3" height="22" fill="#12263A"/><text x="486.3" y="337.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#12263A" text-anchor="start" font-weight="600">0.420</text><text x="36.0" y="384.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#12263A" text-anchor="start" font-weight="600">the night's strongest raw signal, argued down 34 points by its own checks —</text><text x="36.0" y="401.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#12263A" text-anchor="start" font-weight="600">conviction is earned, not asserted.</text><text x="724.0" y="420.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="end">handoff 2026-07-14 A+C · independent re-scores; combined applies all · regenerated 2026-07-17</text></svg>
+      <figcaption>One call decomposed, from the 2026-07-14 nightly handoff.
+        Each gate is an independent re-score of the same raw signal; the
+        combined score applies all of them at once. The gates exist because
+        the calibration history above kept saying the same thing — raw
+        confidence runs hot — so the system was taught to argue against
+        itself before it speaks.</figcaption>
+    </figure>
+
+    <details>
+      <summary>Stack, for the technical reader</summary>
+      <div>Python · SQLite event store (detections, executions, volume events,
+        signal snapshots) · Alpaca + yfinance + CCXT market data · pytest ·
+        Discord/Telegram alerting · ~40 analysis and backfill scripts ·
+        markdown-first reporting. Single-developer, test-covered, no CI/CD
+        theater it doesn't need.</div>
+    </details>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <span class="eyebrow">From the morning report</span>
+    <h2>What a read actually looks like</h2>
+    <div class="prose">
+      <p>Excerpt from a real nightly report (dates and figures representative).
+        Every claim cites the flow behind it — including the caveats that argue
+        against the headline.</p>
+    </div>
+    <div class="terminal" role="img" aria-label="Excerpt from a nightly Ahab report showing per-symbol whale-flow reads">
+<span class="cmt">## Clear accumulation — smart money net in</span><br><br>
+<span class="tick">AAPL</span>  net <span class="pos num">+$7.6B</span> over 17 sessions · up 11 of them · <span class="num">$60B</span> gross<br>
+      One June 8 buy is ~64% of the total, but recent flow <em>confirms</em><br>
+      rather than fades it (last-5: <span class="pos num">+$5.1B</span>). Genuine ongoing buying.<br><br>
+<span class="tick">GOOGL</span> net <span class="neg num">−$7.5B</span> — but 82% is a single month-end day.<br>
+      Ex that day the window is flat and recent flow is strongly<br>
+      <span class="pos">positive</span> (last-5: <span class="pos num">+$4.8B</span>). The headline selling is mechanical<br>
+      rebalancing; the underlying read is net buying.<br><br>
+<span class="cmt">## No whale presence — nothing to follow</span><br><br>
+<span class="tick">SPCE</span>  17 sessions prove there's no whale here: <span class="num">±$0–3M</span> concentrated<br>
+      against <span class="num">$30–830M</span>/day of retail crowd. Not "light" whale<br>
+      activity — <em>none</em>. A pure retail vehicle.
+    </div>
+
+    <div class="prose" style="margin-top:64px">
+      <h3>The same skepticism, drawn</h3>
+      <p style="margin-top:10px">Here's a real one, straight from the database.
+        GOOGL over the 17 sessions to July 16 reads like heavy institutional
+        selling: <strong>−$39.7B</strong> net. But nearly two-thirds of it
+        landed on exactly two calendar days — the Russell reconstitution and
+        the half-year close, the two biggest forced-flow days of the year —
+        and the five most recent sessions quietly flipped to net buying.
+        Strip the plumbing and the story inverts. This is why the scan
+        discounts calendar days instead of trusting raw totals.</p>
+    </div>
+    <figure class="chart">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 430"><title>GOOGL daily concentrated net flow with forced-flow days annotated</title><line x1="56" y1="368.1" x2="744" y2="368.1" stroke="#C9CFC4" stroke-width="1"/><text x="48.0" y="372.1" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">-20</text><line x1="56" y1="302.5" x2="744" y2="302.5" stroke="#C9CFC4" stroke-width="1"/><text x="48.0" y="306.5" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">-15</text><line x1="56" y1="236.9" x2="744" y2="236.9" stroke="#C9CFC4" stroke-width="1"/><text x="48.0" y="240.9" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">-10</text><line x1="56" y1="171.2" x2="744" y2="171.2" stroke="#C9CFC4" stroke-width="1"/><text x="48.0" y="175.2" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">-5</text><line x1="56" y1="105.6" x2="744" y2="105.6" stroke="#C9CFC4" stroke-width="1"/><text x="48.0" y="109.6" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">0</text><line x1="56" y1="40.0" x2="744" y2="40.0" stroke="#C9CFC4" stroke-width="1"/><text x="48.0" y="44.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#3D5266" text-anchor="end">+5</text><text x="0.0" y="0.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12.5" fill="#3D5266" text-anchor="middle" letter-spacing="0.06em" transform="translate(14 212.0) rotate(-90)">concentrated net flow, $B / session</text><rect x="63.7" y="79.0" width="25.1" height="26.6" fill="#2E7D5B"/><text x="76.2" y="404.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="middle">Jun 23</text><rect x="104.2" y="66.1" width="25.1" height="39.5" fill="#2E7D5B"/><rect x="144.6" y="105.6" width="25.1" height="64.1" fill="#B3402E"/><rect x="185.1" y="105.6" width="25.1" height="258.7" fill="#B3402E" fill-opacity="0.45" stroke="#B3402E" stroke-width="1" stroke-dasharray="3 3"/><text x="197.6" y="404.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="middle">Jun 26</text><rect x="225.6" y="105.6" width="25.1" height="34.7" fill="#B3402E"/><rect x="266.0" y="105.6" width="25.1" height="79.1" fill="#B3402E" fill-opacity="0.45" stroke="#B3402E" stroke-width="1" stroke-dasharray="3 3"/><text x="278.6" y="404.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="middle">Jun 30</text><rect x="306.5" y="105.6" width="25.1" height="19.0" fill="#B3402E"/><rect x="347.0" y="105.6" width="25.1" height="45.8" fill="#B3402E"/><rect x="387.5" y="105.6" width="25.1" height="53.8" fill="#B3402E"/><rect x="427.9" y="105.6" width="25.1" height="27.1" fill="#B3402E"/><rect x="468.4" y="105.6" width="25.1" height="51.8" fill="#B3402E"/><rect x="508.9" y="103.5" width="25.1" height="2.1" fill="#2E7D5B"/><rect x="549.3" y="93.7" width="25.1" height="11.9" fill="#2E7D5B"/><rect x="589.8" y="84.0" width="25.1" height="21.6" fill="#2E7D5B"/><rect x="630.3" y="105.6" width="25.1" height="29.7" fill="#B3402E"/><rect x="670.7" y="80.9" width="25.1" height="24.7" fill="#2E7D5B"/><rect x="711.2" y="88.9" width="25.1" height="16.7" fill="#2E7D5B"/><text x="723.8" y="404.0" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="10.5" fill="#3D5266" text-anchor="middle">Jul 16</text><line x1="56" y1="105.6" x2="744" y2="105.6" stroke="#12263A" stroke-width="1.5"/><path d="M 214.2 291.9 Q 291.2 249.7 323.2 250.7" fill="none" stroke="#3D5266" stroke-width="1"/><text x="331.2" y="255.7" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start" font-weight="600">Jun 26 — Russell reconstitution (-19.7B)</text><text x="331.2" y="271.7" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start">the year's biggest forced-flow day.</text><text x="331.2" y="287.7" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#12263A" text-anchor="start">Index plumbing, not conviction.</text><line x1="278.6" y1="188.7" x2="300.6" y2="214.7" stroke="#3D5266" stroke-width="1"/><text x="304.6" y="222.7" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="11.5" fill="#12263A" text-anchor="start">Jun 30 — half-year close</text><path d="M 549.3 70.9 V 64.9 H 736.3 V 70.9" fill="none" stroke="#12263A" stroke-width="1.2"/><text x="642.8" y="56.9" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#2E7D5B" text-anchor="middle" font-weight="600">last 5 sessions: +3.4B net</text></svg>
+      <figcaption>Daily concentrated ("whale") net flow for GOOGL,
+        Jun 23 – Jul 16 2026, from the <code>volume_events</code> store —
+        99,000 anomalous prints aggregated per session. Lighter dashed bars are
+        days the system's own event calendar flags as mechanical index
+        flow.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">The log</span>
+    <h2>Build notes, in the open</h2>
+    <div class="prose">
+      <p>The code is private — it trades a real account — but the engineering
+        isn't. Each entry is the honest version: the problem, the wrong turns,
+        and what shipped.</p>
+    </div>
+    <div class="log-list">
+      <div class="log-entry">
+        <time>2026-07-11</time>
+        <div>
+          <h3><a href="#">Backfill, ensembles, and an honest anchor</a></h3>
+          <p>Regrading 4,067 predictions under a tradeable anchor — and why the
+            ensemble got better when measurement got stricter.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <time>2026-07-02</time>
+        <div>
+          <h3><a href="#">Replacing the paid LLM with a box under my desk</a></h3>
+          <p>Planning the move to a self-hosted open-weights model for the
+            nightly interpretation step, keeping the $0/month constraint intact.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <time>2026-06-23</time>
+        <div>
+          <h3><a href="#">Momentum, whales, and anomalies: a signal bake-off</a></h3>
+          <p>Researching which of three signal families deserves a place in the
+            nightly ensemble — with walk-forward tests, not vibes.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <time>2026-06-09</time>
+        <div>
+          <h3><a href="#">Why "no whale" is a finding, not a failure</a></h3>
+          <p>Three weeks of data proving certain meme stocks have zero
+            institutional footprint — and why that's a tradeable fact.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <h2>Want the full tour?</h2>
+      <p style="margin-top:14px">The repository is private because it manages a
+        live account, but I'm glad to walk through the architecture, the
+        grading system, or any design decision on a call — whiteboard included.</p>
+    </div>
+    <div class="links">
+      <a href="mailto:ojw925@gmail.com">Email</a>
+      <a href="https://www.linkedin.com/in/jinwoooh">LinkedIn</a>
+      <a href="https://github.com/ojw92">github.com/ojw92</a>
+      <!-- EDIT: upload resume.pdf to the repo root; this link then works -->
+      <a href="/resume.pdf">Résumé (PDF)</a>
+    </div>
+    <p class="disclaimer">Ahab is a personal research project. Nothing on this
+      page is investment advice, a track-record claim, or an offer of any kind.
+      All trading discussed is paper or personal-scale. Figures shown are from
+      the system's own internal grading and are presented for engineering
+      illustration only.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var canvas = document.getElementById('sonar');
+  var ctx = canvas.getContext('2d');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var W, H, cx, cy, maxR;
+
+  // Deterministic pseudo-random so the blip field is stable frame to frame
+  function rand(seed) {
+    var x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+    return x - Math.floor(x);
+  }
+  var blips = [];
+  for (var i = 0; i < 26; i++) {
+    blips.push({ a: rand(i) * Math.PI * 2, r: 0.25 + rand(i + 50) * 0.72, s: 1 + rand(i + 100) * 2.2 });
+  }
+
+  function resize() {
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx = W * 0.78; cy = H * 0.42;
+    maxR = Math.max(W, H) * 0.52;
+  }
+
+  function drawStatic() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(143,212,193,0.14)';
+    ctx.lineWidth = 1;
+    for (var k = 1; k <= 4; k++) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, maxR * k / 4, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(cx - maxR, cy); ctx.lineTo(cx + maxR, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy - maxR); ctx.lineTo(cx, cy + maxR); ctx.stroke();
+  }
+
+  var sweep = 0;
+  function frame() {
+    drawStatic();
+    sweep += 0.007;
+    // fading trail behind the sweep line
+    for (var t = 0; t < 40; t++) {
+      var a = sweep - t * 0.012;
+      ctx.strokeStyle = 'rgba(143,212,193,' + (0.10 * (1 - t / 40)) + ')';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a) * maxR, cy + Math.sin(a) * maxR);
+      ctx.stroke();
+    }
+    // blips glow when the sweep passes them
+    for (var i = 0; i < blips.length; i++) {
+      var b = blips[i];
+      var d = (sweep - b.a) % (Math.PI * 2);
+      if (d < 0) d += Math.PI * 2;
+      var glow = Math.max(0, 1 - d / 1.6);
+      var x = cx + Math.cos(b.a) * b.r * maxR;
+      var y = cy + Math.sin(b.a) * b.r * maxR;
+      ctx.fillStyle = 'rgba(143,212,193,' + (0.08 + glow * 0.8) + ')';
+      ctx.beginPath();
+      ctx.arc(x, y, b.s + glow * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  window.addEventListener('resize', function () { resize(); if (reduced) staticScene(); });
+
+  function staticScene() {
+    drawStatic();
+    for (var i = 0; i < blips.length; i++) {
+      var b = blips[i];
+      ctx.fillStyle = 'rgba(143,212,193,0.5)';
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(b.a) * b.r * maxR, cy + Math.sin(b.a) * b.r * maxR, b.s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  if (reduced) { staticScene(); } else { requestAnimationFrame(frame); }
+})();
+</script>
